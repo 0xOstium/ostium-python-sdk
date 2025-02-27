@@ -5,6 +5,8 @@ from .formulae import (PRECISION_18, PRECISION_2, PRECISION_6, GetCurrentRollove
                        CurrentTotalProfitRaw, CurrentTotalProfitP)
 from typing import Dict, Union
 
+# TBD - Not used by SDK
+
 
 def get_liq_price(trade_details, pair_info, block_number):
     current_funding_fee = GetTradeFundingFee(trade_details['funding'], pair_info['accFundingLong'] if trade_details['isBuy']
@@ -20,6 +22,8 @@ def get_liq_price(trade_details, pair_info, block_number):
         trade_details['leverage']) / PRECISION_2, Decimal(trade_rollover_fee)/PRECISION_6, Decimal(current_funding_fee) / PRECISION_6)
 
     return liq_price / PRECISION_18
+
+# TBD - used by SDK
 
 
 def get_funding_fee_long_short(pair_info, block_number):
@@ -58,15 +62,18 @@ def get_funding_fee_long_short(pair_info, block_number):
 
     return float(long_rate), float(short_rate)
 
+# TBD - used by SDK
+# Gets an open trade metrics: such as the open pnl, rollover, funding, liquidation price, price impact, etc.
 
-def get_trade_metrics(trade_details, price_data, block_number):
+
+def get_trade_metrics(trade_details, price_data, block_number, verbose=False):
     """
     Calculate PNL and related metrics for a trade.
     """
     if not trade_details or not price_data or not block_number:
         return {
             'pnl': 0,
-            'pnl_raw': '0',
+            # 'pnl_raw': '0',
             'pnl_percent': 0,
             'rollover': 0,
             'funding': 0,
@@ -85,6 +92,9 @@ def get_trade_metrics(trade_details, price_data, block_number):
         str(block_number)
     )
 
+    if verbose:
+        print(f"Current rollover fee: {current_rollover_raw}")
+
     # Calculate rollover for this trade
     rollover_raw = GetTradeRolloverFee(
         trade_details['rollover'],
@@ -92,6 +102,9 @@ def get_trade_metrics(trade_details, price_data, block_number):
         trade_details['collateral'],
         trade_details['leverage']
     )
+
+    if verbose:
+        print(f"Rollover fee: {rollover_raw}")
 
     # Get funding rate
     funding_rate_raw = GetFundingRate(
@@ -106,6 +119,9 @@ def get_trade_metrics(trade_details, price_data, block_number):
         pair_info['shortOI']
     )
 
+    if verbose:
+        print(f"Funding rate: {funding_rate_raw}")
+
     # Calculate funding fee
     funding_raw = GetTradeFundingFee(
         trade_details['funding'],
@@ -113,6 +129,9 @@ def get_trade_metrics(trade_details, price_data, block_number):
         trade_details['collateral'],
         trade_details['leverage']
     )
+
+    if verbose:
+        print(f"Funding fee: {funding_raw}")
 
     # Calculate liquidation price
     liquidation_price = GetTradeLiquidationPrice(
@@ -125,22 +144,23 @@ def get_trade_metrics(trade_details, price_data, block_number):
     )
     liquidation_price = Decimal(liquidation_price) / PRECISION_18
 
+    if verbose:
+        print(
+            f"Liquidation price: {liquidation_price} with rollover {rollover_raw} and funding {funding_raw}")
+
     # Calculate price impact
+    is_open = False  # Get the price assuming a close
+
     price_impact_raw = GetPriceImpact(
         str(int(Decimal(str(price_data['mid'])) * PRECISION_18)),
         str(int(Decimal(str(price_data['bid'])) * PRECISION_18)),
         str(int(Decimal(str(price_data['ask'])) * PRECISION_18)),
-        pair_info['spreadP'],
-        False,
-        trade_details['isBuy'],
-        True,
-        str(Decimal(trade_details['collateral']) *
-            Decimal(trade_details['leverage']) / PRECISION_2),
-        pair_info['tradeSizeRef']
+        is_open,
+        trade_details['isBuy']
     )
     price_after_impact = price_impact_raw['priceAfterImpact']
 
-    # Calculate PNL
+    # Calculate PNL (abs)
     pnl_raw = CurrentTradeProfitRaw(
         trade_details['openPrice'],
         price_after_impact,
@@ -149,7 +169,7 @@ def get_trade_metrics(trade_details, price_data, block_number):
         trade_details['collateral']
     )
 
-    # Calculate total profit
+    # Calculate total profit (abs)
     total_profit_raw = CurrentTotalProfitRaw(
         trade_details['openPrice'],
         price_after_impact,
@@ -176,13 +196,14 @@ def get_trade_metrics(trade_details, price_data, block_number):
 
     return {
         'pnl': float(pnl),
-        'pnl_raw': str(pnl_raw),
+        # 'pnl_raw': str(pnl_raw),
         'pnl_percent': float(pnl_percent),
         'rollover': float(rollover),
         'funding': float(funding),
-        'funding_raw': str(funding_raw),
-        'rollover_raw': str(rollover_raw),
+        # 'funding_raw': str(funding_raw),
+        # 'rollover_raw': str(rollover_raw),
         'total_profit': float(total_profit),
+        # 'total_profit_percent': float(total_profit_percent),
         'net_pnl': float(net_pnl),
         'net_value': float(net_value),
         'liquidation_price': float(liquidation_price),

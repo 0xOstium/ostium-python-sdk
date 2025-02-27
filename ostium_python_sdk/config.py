@@ -22,7 +22,9 @@ class NetworkConfig:
 
     @classmethod
     def testnet(cls) -> 'NetworkConfig':
-        return cls(
+        return cls(  # tbd
+
+
             graph_url="https://subgraph.satsuma-prod.com/391a61815d32/ostium/ost-sep-final/api",
             contracts={
                 "usdc": "0xe73B11Fb1e3eeEe8AF2a23079A4410Fe1B370548",

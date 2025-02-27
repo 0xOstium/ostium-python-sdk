@@ -385,8 +385,17 @@ TBD
 TBD
 
 
-### Funding rate calculation - SDK to get breakdown of FF, RF, PnL, etc.
-TBD
+### Get a certain Pair Net Rate % (Funding Fees, Rollover)
+
+```bash 
+### Use sdk.get_pair_net_rate_percent_per_hours()
+```
+
+### Open Trade Fees calculation - SDK to get breakdown of FF, RF, PnL, etc.
+
+```bash
+## Use sdk.get_open_trade_metrics()
+```
 
 
 ## Example Usage Scripts

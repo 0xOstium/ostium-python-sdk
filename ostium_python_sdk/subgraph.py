@@ -56,7 +56,8 @@ class SubgraphClient:
               curFundingLong  
               curFundingShort
               curRollover
-              maxLeverage
+              totalOpenTrades
+              totalOpenLimitOrders
               accRollover
               lastRolloverBlock
               rolloverFeePerBlock
@@ -64,8 +65,18 @@ class SubgraphClient:
               accFundingShort
               lastFundingBlock
               maxFundingFeePerBlock
-              lastFundingVelocity
               lastFundingRate
+              maxOI
+              hillInflectionPoint
+              hillPosScale
+              hillNegScale
+              lastOiDelta
+              springFactor
+              sFactorUpScaleP
+              sFactorDownScaleP
+              lastTradePrice
+              maxLeverage
+              lastFundingVelocity
               group {
                 id
                 name

@@ -1,12 +1,9 @@
 from datetime import datetime
 from decimal import Decimal
-import os
-from humanize import naturaltime
 from web3 import Web3
 from ast import literal_eval
 
 from .constants import MAX_PROFIT_P, MAX_STOP_LOSS_P
-from .formulae import GetTakeProfitPrice
 
 
 def format_with_precision(number, precision):

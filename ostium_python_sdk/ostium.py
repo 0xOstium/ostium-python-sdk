@@ -1,8 +1,6 @@
-import os
 import traceback
 from enum import Enum
 from ostium_python_sdk.constants import PRECISION_2
-from ostium_python_sdk.formulae_wrapper import get_trade_metrics
 from web3 import Web3
 from .abi.abi import usdc_abi, ostium_trading_abi, ostium_trading_storage_abi
 from .utils import convert_to_scaled_integer, fromErrorCodeToMessage, get_tp_sl_prices, to_base_units

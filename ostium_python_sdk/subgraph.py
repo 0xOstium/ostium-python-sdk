@@ -100,6 +100,21 @@ class SubgraphClient:
         else:
             raise ValueError(f"No pair details found for pair ID: {pair_id}")
 
+    async def get_liq_margin_threshold_p(self):
+        self.log(f"Fetching get_liq_margin_threshold_p")
+        query = gql(
+            """
+          query metaDatas {
+            metaDatas {              
+              liqMarginThresholdP
+            }
+          }
+          """
+        )
+        result = await self.client.execute_async(query)
+
+        return result['metaDatas'][0]['liqMarginThresholdP']
+
     async def get_open_trades(self, address):
         # self.log(f"Fetching open trades for address: {address}")
         query = gql(
@@ -138,6 +153,7 @@ class SubgraphClient:
             longOI
             shortOI
             maxOI
+            maxLeverage
             hillInflectionPoint
             hillPosScale
             hillNegScale

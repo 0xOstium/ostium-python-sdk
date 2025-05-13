@@ -1,6 +1,6 @@
 from decimal import Decimal
 from .formulae import (PRECISION_18, PRECISION_2, PRECISION_6, GetCurrentRolloverFee, GetFundingRate,
-                       GetTradeFundingFee, GetTradeLiquidationPrice, GetTradeRolloverFee,
+                       GetTradeFundingFee, getTradeLiquidationPrice, GetTradeRolloverFee,
                        GetPriceImpact, CurrentTradeProfitRaw,
                        CurrentTotalProfitRaw, CurrentTotalProfitP)
 

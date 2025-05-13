@@ -110,27 +110,54 @@ def RemoveCollateralFromLeverage(
 # v2 (formulae v1.3.3)
 
 
-def GetTradeLiquidationPrice(
-    open_price: Decimal,
+def getTradeLiquidationPrice(
+    liqMarginThresholdP: Decimal,
+    openPrice: Decimal,
     long: bool,
     collateral: Decimal,
     leverage: Decimal,
-    rollover_fee: Decimal,
-    funding_fee: Decimal
+    rolloverFee: Decimal,
+    fundingFee: Decimal,
+    maxLeverage: Decimal
 ) -> Decimal:
     print(
-        f"***** GetTradeLiquidationPrice: open_price: {open_price}, long: {long}, collateral: {collateral}, leverage: {leverage}, rollover_fee: {rollover_fee}, funding_fee: {funding_fee}")
+        f"***** GetTradeLiquidationPrice: open_price: {openPrice}, long: {long}, collateral: {collateral}, leverage: {leverage}, rollover_fee: {rolloverFee}, funding_fee: {fundingFee}")
 
-    liq_price_distance = (
-        open_price *
-        (collateral * (LIQ_THRESHOLD_P) / Decimal(100) - rollover_fee - funding_fee) /
-        collateral /
-        leverage
-    )
+    rawAdjustedThreshold = (liqMarginThresholdP * leverage /
+                            maxLeverage).quantize(quantization_6, rounding=ROUND_DOWN)
+    liqMarginValue = (
+        collateral * rawAdjustedThreshold).quantize(quantization_6, rounding=ROUND_DOWN)
+    targetCollateralAfterFees = (
+        collateral - liqMarginValue - rolloverFee - fundingFee)
+    liqPriceDistance = (openPrice * targetCollateralAfterFees / collateral /
+                        leverage).quantize(quantization_6, rounding=ROUND_DOWN)
+    liqPrice = (
+        openPrice - liqPriceDistance if long else openPrice + liqPriceDistance)
+    return max(Decimal('0'), liqPrice)
 
-    liq_price = open_price - liq_price_distance if long else open_price + liq_price_distance
-    liq_price = liq_price if liq_price > 0 else 0
-    return liq_price
+
+def getTradeValue(
+    collateral: Decimal,
+    percentProfit: Decimal,
+    rolloverFee: Decimal,
+    fundingFee: Decimal
+) -> Decimal:
+    profitPart = (collateral * percentProfit / Decimal('100')
+                  ).quantize(quantization_6, rounding=ROUND_DOWN)
+    value = (collateral + profitPart - rolloverFee - fundingFee)
+
+    return value
+
+
+def getTradeLiquidationMargin(
+    liqMarginThresholdP: Decimal,
+    collateral: Decimal,
+    leverage: Decimal,
+    maxLeverage: Decimal
+) -> Decimal:
+    rawAdjustedThreshold = (liqMarginThresholdP * leverage /
+                            maxLeverage).quantize(quantization_6, rounding=ROUND_DOWN)
+    return (collateral * rawAdjustedThreshold / Decimal('100')).quantize(quantization_6, rounding=ROUND_DOWN)
 
 
 # ???

@@ -36,10 +36,10 @@ def format_with_precision(number, precision):
         raise TypeError(f"Invalid input: {e}")
 
 
-def calculate_fee_per_hours(cur_funding_rate, hours=24):
+def calculate_fee_per_hours(cur_funding_rate, hours=24, round_to_precision=5):
     period = hours * (10 / 3) * 60 * 60 * 100
     rate = Decimal(cur_funding_rate) * Decimal(period)
-    return rate
+    return round(rate, round_to_precision)
 
 
 def get_tp_sl_prices(trade_params):

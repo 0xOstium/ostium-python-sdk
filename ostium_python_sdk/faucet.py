@@ -2,7 +2,7 @@ from web3 import Web3
 from .exceptions import NetworkError
 import time
 from datetime import datetime
-from ostium_python_sdk.abi.faucet_abi import faucet_abi  # Import the ABI
+from ostium_python_sdk.abi.faucet_testnet_abi import faucet_abi  # Import the ABI
 
 # Class for testnet usage only - to get testnet USDC tokens
 

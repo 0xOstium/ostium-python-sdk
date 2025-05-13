@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 import time
-from ostium_python_sdk.abi.abi import usdc_abi
+from ostium_python_sdk.abi.usdc_abi import usdc_abi
 from web3 import Web3
 
 REFRESH_BALANCE_SECONDS_INTERVAL = 60 * 5

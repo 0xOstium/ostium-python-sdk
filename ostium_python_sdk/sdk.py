@@ -58,6 +58,7 @@ class OstiumSDK:
                 f"but RPC is connected to chain ID {actual_chain_id}. Please check your RPC_URL."
             )
 
+        print(f"v.UP! network_config: {self.network_config} !!!")
         # Initialize Ostium instance
         self.ostium = Ostium(
             self.w3,
@@ -86,8 +87,12 @@ class OstiumSDK:
         if self.verbose:
             print(message)
 
-    async def get_open_trades(self):
-        trader_public_address = self.ostium.get_public_address()
+    async def get_open_trades(self, trader_address=None):
+        if trader_address is None:
+            trader_public_address = self.ostium.get_public_address()
+        else:
+            trader_public_address = trader_address
+
         self.log(f"Trader public address: {trader_public_address}")
         open_trades = await self.subgraph.get_open_trades(trader_public_address)
         return open_trades, trader_public_address
@@ -148,6 +153,14 @@ class OstiumSDK:
         net_short_percent = format_with_precision(
             ff_short-rollover_value, precision=4)
         return net_long_percent, net_short_percent
+
+    async def get_rollover_rate_for_pair_id(self, pair_id, period_hours=24):
+        pair_details = await self.subgraph.get_pair_details(pair_id)
+        rollover_fee_per_block = Decimal(
+            pair_details['rolloverFeePerBlock']) / Decimal('1e18')
+        rollover = calculate_fee_per_hours(
+            rollover_fee_per_block, hours=period_hours)
+        return rollover
 
     async def get_funding_rate_for_pair_id(self, pair_id, period_hours=24):
         pair_details = await self.subgraph.get_pair_details(pair_id)

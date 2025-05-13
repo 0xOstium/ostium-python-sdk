@@ -2,7 +2,9 @@ import traceback
 from enum import Enum
 from ostium_python_sdk.constants import PRECISION_2
 from web3 import Web3
-from .abi.abi import usdc_abi, ostium_trading_abi, ostium_trading_storage_abi
+from .abi.usdc_abi import usdc_abi
+from .abi.trading_abi import trading_abi
+from .abi.trading_storage_abi import trading_storage_abi
 from .utils import convert_to_scaled_integer, fromErrorCodeToMessage, get_tp_sl_prices, to_base_units
 from eth_account.account import Account
 
@@ -26,9 +28,9 @@ class Ostium:
         self.usdc_contract = self.web3.eth.contract(
             address=self.usdc_address, abi=usdc_abi)
         self.ostium_trading_storage_contract = self.web3.eth.contract(
-            address=self.ostium_trading_storage_address, abi=ostium_trading_storage_abi)
+            address=self.ostium_trading_storage_address, abi=trading_storage_abi)
         self.ostium_trading_contract = self.web3.eth.contract(
-            address=self.ostium_trading_address, abi=ostium_trading_abi)
+            address=self.ostium_trading_address, abi=trading_abi)
 
         self.slippage_percentage = 2  # 2%
 
@@ -135,7 +137,7 @@ class Ostium:
         self.log(f"Cancel Limit Order Receipt: {trade_receipt}")
         return trade_receipt
 
-    def close_trade(self, pair_id, trade_index, close_percentage = 100):
+    def close_trade(self, pair_id, trade_index, close_percentage=100):
         self.log(f"Closing trade for pair {pair_id}, index {trade_index}")
         account = self._get_account()
 
@@ -157,7 +159,8 @@ class Ostium:
         return trade_receipt
 
     def remove_collateral(self, pair_id, trade_index, remove_amount):
-        self.log(f"Remove collateral for trade for pair {pair_id}, index {trade_index}: {remove_amount} USDC")
+        self.log(
+            f"Remove collateral for trade for pair {pair_id}, index {trade_index}: {remove_amount} USDC")
         account = self._get_account()
 
         amount = to_base_units(remove_amount, decimals=6)

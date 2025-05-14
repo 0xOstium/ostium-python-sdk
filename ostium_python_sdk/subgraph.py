@@ -1,4 +1,3 @@
-import os
 from gql import gql
 
 from gql import Client
@@ -249,3 +248,106 @@ class SubgraphClient:
         result = await self.client.execute_async(query, variable_values={"trader": trader, "last_n_orders": last_n_orders})
 
         return list(reversed(result['orders']))  # Reverse the final list
+
+    async def get_order_by_id(self, order_id):
+        """
+        Get an order by its ID
+        """
+        query = gql(
+            """
+            query GetOrder($order_id: ID!) {
+              orders(where: {id: $order_id}) {
+                id
+                trader
+                pair {
+                  id
+                  from
+                  to
+                  feed
+                }
+                tradeID
+                limitID
+                orderType
+                orderAction
+                price
+                priceAfterImpact
+                priceImpactP
+                collateral
+                notional
+                tradeNotional
+                profitPercent
+                totalProfitPercent
+                amountSentToTrader
+                isBuy
+                initiatedAt
+                executedAt
+                initiatedTx
+                executedTx
+                initiatedBlock
+                executedBlock
+                leverage
+                isPending
+                isCancelled
+                cancelReason
+                devFee
+                vaultFee
+                oracleFee
+                liquidationFee
+                fundingFee
+                rolloverFee
+                closePercent
+              }
+            }
+            """
+        )
+        
+        result = await self.client.execute_async(query, variable_values={"order_id": str(order_id)})
+        
+        if result and 'orders' in result and len(result['orders']) > 0:
+            return result['orders'][0]
+        return None
+
+    async def get_trade_by_id(self, trade_id):
+        """
+        Get a trade by its ID
+        """
+        query = gql(
+            """
+            query GetTrade($trade_id: ID!) {
+              trades(where: {id: $trade_id}) {
+                id
+                trader
+                pair {
+                  id
+                  from
+                  to
+                  feed
+                }
+                index
+                tradeID
+                tradeType
+                openPrice
+                closePrice
+                takeProfitPrice
+                stopLossPrice
+                collateral
+                notional
+                tradeNotional
+                highestLeverage
+                leverage
+                isBuy
+                isOpen
+                closeInitiated
+                funding
+                rollover
+                timestamp
+              }
+            }
+            """
+        )
+        
+        result = await self.client.execute_async(query, variable_values={"trade_id": str(trade_id)})
+        
+        if result and 'trades' in result and len(result['trades']) > 0:
+            return result['trades'][0]
+        return None

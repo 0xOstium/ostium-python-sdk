@@ -19,10 +19,11 @@ from .subgraph import SubgraphClient
 
 
 class OstiumSDK:
-    def __init__(self, network: Union[str, NetworkConfig], private_key: str = None, rpc_url: str = None, verbose=False):
+    def __init__(self, network: Union[str, NetworkConfig], private_key: str = None, rpc_url: str = None, verbose=False, use_delegation=False):
         self.verbose = verbose
         load_dotenv()
         self.private_key = private_key or os.getenv('PRIVATE_KEY')
+        self.use_delegation = use_delegation
 
         self.rpc_url = rpc_url or os.getenv('RPC_URL')
         if not self.rpc_url:
@@ -65,7 +66,8 @@ class OstiumSDK:
             self.network_config.contracts["tradingStorage"],
             self.network_config.contracts["trading"],
             private_key=self.private_key,
-            verbose=self.verbose
+            verbose=self.verbose,
+            use_delegation=self.use_delegation
         )
 
         # Initialize subgraph client

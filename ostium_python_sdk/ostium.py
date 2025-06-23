@@ -7,7 +7,7 @@ from web3 import Web3
 from .abi.usdc_abi import usdc_abi
 from .abi.trading_abi import trading_abi
 from .abi.trading_storage_abi import trading_storage_abi
-from .utils import convert_to_scaled_integer, fromErrorCodeToMessage, get_tp_sl_prices, to_base_units
+from .utils import convert_to_scaled_integer, fromErrorCodeToMessage, get_tp_sl_prices, to_base_units, approve_usdc, get_account
 from eth_account.account import Account
 
 
@@ -75,13 +75,8 @@ class Ostium:
         return self.slippage_percentage
 
     def get_public_address(self):
-        public_address = self._get_account().address
+        public_address = get_account(self.web3, self.private_key).address
         return public_address
-
-    def _get_account(self) -> Account:
-        self._check_private_key()
-        """Get account from stored private key"""
-        return self.web3.eth.account.from_key(self.private_key)
 
     def get_block_number(self):
         return self.web3.eth.get_block('latest')['number']
@@ -96,10 +91,18 @@ class Ostium:
 
     def perform_trade(self, trade_params, at_price):
         self.log(f"Performing trade with params: {trade_params}")
-        account = self._get_account()
+        account = get_account(self.web3, self.private_key)
         amount = to_base_units(trade_params['collateral'], decimals=6)
-        self.__approve(account, amount, self.use_delegation,
-                       trade_params.get('trader_address'))
+
+        # Use shared approval function
+        approve_usdc(
+            self.web3,
+            self.usdc_contract,
+            self.ostium_trading_address,
+            amount,
+            self.private_key,
+            self.verbose
+        )
 
         try:
             self.log(f"Final trade parameters being sent: {trade_params}")
@@ -255,7 +258,7 @@ class Ostium:
             A dictionary containing the transaction receipt and order ID
         """
         self.log(f"Closing trade for pair {pair_id}, index {trade_index}")
-        account = self._get_account()
+        account = get_account(self.web3, self.private_key)
 
         close_percentage = to_base_units(close_percentage, decimals=2)
 
@@ -317,7 +320,7 @@ class Ostium:
     def remove_collateral(self, pair_id, trade_index, remove_amount):
         self.log(
             f"Remove collateral for trade for pair {pair_id}, index {trade_index}: {remove_amount} USDC")
-        account = self._get_account()
+        account = get_account(self.web3, self.private_key)
 
         amount = to_base_units(remove_amount, decimals=6)
 
@@ -349,7 +352,7 @@ class Ostium:
         Returns:
             The transaction receipt
         """
-        account = self._get_account()
+        account = get_account(self.web3, self.private_key)
         try:
             amount = to_base_units(collateral, decimals=6)
             self.__approve(account, amount,
@@ -412,7 +415,7 @@ class Ostium:
         """
         self.log(
             f"Updating TP for pair {pair_id}, index {trade_index} to {tp_price}")
-        account = self._get_account()
+        account = get_account(self.web3, self.private_key)
         try:
             tp_value = to_base_units(tp_price, decimals=18)
 
@@ -470,7 +473,7 @@ class Ostium:
         Returns:
             The transaction receipt
         """
-        account = self._get_account()
+        account = get_account(self.web3, self.private_key)
         try:
             sl_value = to_base_units(sl, decimals=18)
 
@@ -546,7 +549,7 @@ class Ostium:
                     f"Sufficient allowance for {trader_address} not present. Please approve the trading contract to spend USDC.")
 
     def withdraw(self, amount, receiving_address):
-        account = self._get_account()
+        account = get_account(self.web3, self.private_key)
 
         try:
             amount_in_base_units = to_base_units(amount, decimals=6)

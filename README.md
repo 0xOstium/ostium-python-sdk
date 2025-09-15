@@ -78,6 +78,8 @@ pytest -v tests/test_overnight_max_leverage.py
 pytest -v tests/test_slippage.py 
 pytest -v tests/test_target_funding_rate.py 
 
+pytest -v tests/test_vault.py 
+
 
 
 

@@ -3,6 +3,7 @@ from .exceptions import NetworkError
 import time
 from datetime import datetime
 from ostium_python_sdk.abi.faucet_testnet_abi import faucet_abi  # Import the ABI
+from .utils import get_account
 
 # Class for testnet usage only - to get testnet USDC tokens
 
@@ -50,12 +51,8 @@ class Faucet:
             raise ValueError(
                 "Private key is required for Faucet operations")
 
-    def _get_account(self):
-        self._check_private_key()
-        return self.web3.eth.account.from_key(self.private_key)
-
     def request_tokens(self) -> dict:
-        account = self._get_account()
+        account = get_account(self.web3, self.private_key)
         self.log("Requesting tokens from faucet")
         """
         Request testnet USDC tokens from the faucet.

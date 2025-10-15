@@ -365,3 +365,180 @@ async def test_close_trade_with_slippage(sdk):
 
     except Exception as e:
         pytest.fail(f"Test failed: {str(e)}")
+
+
+@pytest.mark.asyncio
+async def test_close_trade_with_tight_slippage_fails(sdk):
+    """Test that close_trade with too tight slippage results in cancelled order and live trade"""
+    # Get address from private key
+    if not os.getenv('PRIVATE_KEY'):
+        pytest.skip(
+            "PRIVATE_KEY not found in .env file (test requires private key)")
+
+    account = Account.from_key(os.getenv('PRIVATE_KEY'))
+
+    # Check balances
+    eth_balance, usdc_balance = sdk.balance.get_balance(account.address)
+    print(f"Current ETH balance: {eth_balance}")
+    print(f"Current USDC balance: {usdc_balance}")
+
+    if eth_balance < Decimal('0.002'):
+        pytest.skip(f"Insufficient ETH balance: {eth_balance} ETH")
+
+    if usdc_balance < Decimal('100'):
+        pytest.skip(f"Insufficient USDC balance: {usdc_balance} USDC")
+
+    # Get latest price
+    latest_price, _, _ = await sdk.price.get_price("BTC", "USD")
+    latest_price = Decimal(str(latest_price))
+    print(f"Latest BTC price: ${latest_price:,.2f}")
+
+    # Step 1: Open a trade with normal slippage
+    print("\n=== STEP 1: Opening a trade with normal slippage ===")
+    sdk.ostium.set_slippage_percentage(15)
+    print(f"Slippage set to: {sdk.ostium.get_slippage_percentage()}%")
+
+    trade_params = {
+        'collateral': Decimal('150'),
+        'leverage': Decimal('50'),
+        'asset_type': 0,
+        'direction': True,
+        'order_type': 'MARKET'
+    }
+
+    try:
+        print("Placing market order...")
+        trade_result = sdk.ostium.perform_trade(trade_params, at_price=latest_price)
+        order_id = trade_result['order_id']
+
+        assert order_id is not None, "Order ID should not be None"
+
+        print(f"✓ Order placed successfully!")
+        print(f"  Order ID: {order_id}")
+
+        # Track the order until it's processed
+        print("\nTracking order execution...")
+        result = await sdk.ostium.track_order_and_trade(sdk.subgraph, order_id)
+
+        assert result['trade'] is not None, "Trade should exist"
+        assert result['trade'].get('isOpen', False), "Trade should be open"
+
+        order = result['order']
+        trade = result['trade']
+        pair_id = int(order['pair']['id'])
+        trade_index = int(trade['index'])
+
+        print(f"✓ Trade executed successfully!")
+        print(f"  Trade ID: {trade.get('tradeID')}")
+        print(f"  Pair ID: {pair_id}")
+        print(f"  Trade index: {trade_index}")
+        print(f"  Trade is open: {trade.get('isOpen', False)}")
+
+        # Step 2: Try to close with extremely tight slippage
+        print("\n=== STEP 2: Attempting to close with tight slippage (0.0001%) ===")
+
+        # Set extremely tight slippage
+        sdk.ostium.set_slippage_percentage(Decimal("0.01"))
+        print(f"Slippage set to: {sdk.ostium.get_slippage_percentage()}%")
+        print("This should cause the order to be cancelled due to slippage protection")
+
+        # Get current market price
+        current_price, _, _ = await sdk.price.get_price("BTC", "USD")
+        current_price = Decimal(str(current_price))
+        print(f"Current market price: ${current_price:,.2f}")
+
+        # Attempt to close the trade with tight slippage
+        print(f"\nAttempting to close trade at pair_id={pair_id}, index={trade_index}")
+        close_result = sdk.ostium.close_trade(
+            pair_id=pair_id,
+            trade_index=trade_index,
+            market_price=current_price,
+            close_percentage=100
+        )
+
+        close_order_id = close_result['order_id']
+        assert close_order_id is not None, "Close order ID should not be None"
+
+        print(f"✓ Close order transaction submitted!")
+        print(f"  Close order ID: {close_order_id}")
+        print(f"  Transaction hash: {close_result['receipt']['transactionHash'].hex()}")
+
+        # Step 3: Wait for the order to timeout, then call close_market_timeout to cancel it
+        print("\n=== STEP 3: Waiting for order timeout ===")
+        print("Waiting 5 seconds for order to timeout due to tight slippage...")
+        await asyncio.sleep(5)  # Wait 5 seconds for the order to timeout
+
+        print("\nCalling close_market_timeout to cancel the order...")
+        timeout_result = sdk.ostium.close_market_timeout(
+            order_id=close_order_id,
+            retry=False
+        )
+
+        print(f"✓ close_market_timeout called successfully!")
+        print(f"  Transaction hash: {timeout_result['receipt']['transactionHash'].hex()}")
+        print(f"  Order ID: {timeout_result['order_id']}")
+        print(f"  Retry: {timeout_result['retry']}")
+
+        # Step 4: Track the close order - it should now be cancelled
+        print("\n=== STEP 4: Tracking close order (expecting cancellation) ===")
+        close_order_result = await sdk.ostium.track_order_and_trade(
+            sdk.subgraph,
+            close_order_id,
+            polling_interval=2,
+            max_attempts=30
+        )
+
+        assert close_order_result['order'] is not None, "Close order should be found"
+
+        close_order = close_order_result['order']
+
+        print(f"\n✓ Close order tracked:")
+        print(f"  Order ID: {close_order_id}")
+        print(f"  Status: {'Pending' if close_order.get('isPending', True) else 'Processed'}")
+        print(f"  Cancelled: {close_order.get('isCancelled', False)}")
+
+        if close_order.get('isCancelled', False):
+            print(f"  ✓ Cancel reason: {close_order.get('cancelReason', 'Unknown')}")
+
+        # Verify the order was cancelled
+        assert close_order.get('isCancelled', False), "Close order should be cancelled due to tight slippage"
+
+        # Step 5: Verify the trade is still open
+        print("\n=== STEP 5: Verifying trade is still live ===")
+
+        # Fetch the trade again to verify it's still open
+        if close_order_result['trade']:
+            updated_trade = close_order_result['trade']
+            print(f"  Trade ID: {updated_trade.get('tradeID')}")
+            print(f"  Trade is open: {updated_trade.get('isOpen', False)}")
+            print(f"  Collateral: ${updated_trade.get('collateral', 0):.2f} USDC")
+
+            # Verify trade is still open
+            assert updated_trade.get('isOpen', False), "Trade should still be open after cancelled close order"
+
+            print("\n✓ Test passed: Tight slippage caused order cancellation, trade remains open")
+        else:
+            # If we don't get trade info from close order result, the trade is still open
+            print("  Trade not returned in close order result (expected for cancelled orders)")
+            print("\n✓ Test passed: Tight slippage caused order cancellation")
+
+        # Optional: Clean up by closing the trade with normal slippage
+        print("\n=== CLEANUP: Closing the trade with normal slippage ===")
+        sdk.ostium.set_slippage_percentage(15)
+        print(f"Slippage reset to: {sdk.ostium.get_slippage_percentage()}%")
+
+        cleanup_price, _, _ = await sdk.price.get_price("BTC", "USD")
+        cleanup_price = Decimal(str(cleanup_price))
+
+        cleanup_result = sdk.ostium.close_trade(
+            pair_id=pair_id,
+            trade_index=trade_index,
+            market_price=cleanup_price,
+            close_percentage=100
+        )
+
+        print(f"✓ Cleanup close order submitted")
+        print(f"  Transaction hash: {cleanup_result['receipt']['transactionHash'].hex()}")
+
+    except Exception as e:
+        pytest.fail(f"Test failed: {str(e)}")

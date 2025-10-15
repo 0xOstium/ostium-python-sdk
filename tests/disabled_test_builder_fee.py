@@ -125,7 +125,7 @@ async def test_perform_trade_with_builder_fee(sdk):
     # Define a builder address (using a valid Ethereum address)
     # In production, this would be the actual builder's address
     builder_address = "0x5346C41883F75136522df9eaD7399A38482019a3"
-    builder_fee_amount = 100  # Fee in pips
+    builder_fee_pct = 0.1  # Fee in pct (0.1%)
 
     # Define trade parameters with builder fee
     trade_params = {
@@ -135,12 +135,12 @@ async def test_perform_trade_with_builder_fee(sdk):
         'direction': True,                     # Long
         'order_type': 'MARKET',
         'builder_address': builder_address,    # Custom builder address
-        'builder_fee': builder_fee_amount      # Custom builder fee
+        'builder_fee': builder_fee_pct      # Custom builder fee
     }
 
     print(f"\nPlacing market order with builder fee...")
     print(f"  Builder address: {builder_address}")
-    print(f"  Builder fee: {builder_fee_amount / 100}%")
+    print(f"  Builder fee: {builder_fee_pct}%")
 
     try:
         trade_result = sdk.ostium.perform_trade(
@@ -210,7 +210,7 @@ async def test_perform_trade_with_limit_order_and_builder_fee(sdk):
 
     # Define builder address and fee
     builder_address = "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb1"
-    builder_fee_amount = 300  # 300 pips = 0.3%
+    builder_fee_pct = 0.3  # 0.3%
 
     # Define trade parameters with LIMIT order and builder fee
     trade_params = {
@@ -220,12 +220,12 @@ async def test_perform_trade_with_limit_order_and_builder_fee(sdk):
         'direction': True,                     # Long
         'order_type': 'LIMIT',                 # LIMIT order
         'builder_address': builder_address,
-        'builder_fee': builder_fee_amount
+        'builder_fee': builder_fee_pct
     }
 
     print(f"\nPlacing LIMIT order with builder fee...")
     print(f"  Builder address: {builder_address}")
-    print(f"  Builder fee: {builder_fee_amount / 100}%")
+    print(f"  Builder fee: {builder_fee_pct}%")
 
     try:
         trade_result = sdk.ostium.perform_trade(

@@ -61,8 +61,8 @@ async def main():
         # Optional: Builder fees (for MEV protection or custom order routing)
         # Builder fees allow you to specify an address that receives a fee from the trade
         # If not specified, defaults to zero address with zero fee
-        # 'builder_address': '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb1',  # Builder's Ethereum address
-        # 'builder_fee': 100,   # Fee in pips (100 = 0.1%, max 1000 = 1.0%)
+        # 'builder_address': '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb1',  # Builder's EVM address
+        # 'builder_fee': 0.1,   # Builder fee in percent  (Max 0.5 = 0.5%)
     }
 
     try:

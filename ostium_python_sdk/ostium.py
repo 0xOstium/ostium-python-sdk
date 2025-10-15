@@ -145,14 +145,12 @@ class Ostium:
                 if not self.web3.is_address(trade_params['builder_address']):
                     raise Exception('Invalid builder address format')
                 
-                if trade_params['builder_fee'] > 1000:
-                    raise Exception('Builder fee too high: Max 1000 (1%)')
-                if isinstance(trade_params['builder_fee'], float):
-                    raise Exception('Builder fee cannot have decimals')
+                if trade_params['builder_fee'] > 0.5:
+                    raise Exception('Builder fee too high: Max 0.5 (0.5%)')
                 
                 builder_fee = {
                     'builder': trade_params['builder_address'],
-                    'builderFee': convert_to_scaled_integer(trade_params['builder_fee'], precision=0, scale=3)
+                    'builderFee': convert_to_scaled_integer(trade_params['builder_fee'], precision=4, scale=6)
                 }
 
             if self.use_delegation and 'trader_address' in trade_params:
@@ -346,6 +344,122 @@ class Ostium:
             'receipt': trade_receipt,
             'order_id': order_id
         }
+
+    def close_market_timeout(self, order_id, retry=False, trader_address=None):
+        """
+        Close a trade that has timed out in the market
+        
+        Args:
+            order_id: The ID of the order that has timed out
+            retry: Whether to retry the close operation (True) or cancel it (False)
+            trader_address: Optional address of the trader if different from the account (for delegation)
+        
+        Returns:
+            A dictionary containing the transaction receipt
+        """
+        self.log(f"Closing market timeout for order {order_id}, retry={retry}")
+        account = self._get_account()
+        
+        try:
+            if self.use_delegation and trader_address:
+                self.log(
+                    f"Using delegatedAction to close market timeout on behalf of {trader_address}")
+                
+                close_market_timeout_func = self.ostium_trading_contract.functions.closeTradeMarketTimeout(
+                    int(order_id), bool(retry)
+                )
+                
+                inner_encoded_data = close_market_timeout_func.build_transaction({'gas': 0})['data']
+                
+                tx = self.ostium_trading_contract.functions.delegatedAction(
+                    trader_address, inner_encoded_data
+                ).build_transaction({'from': account.address})
+            else:
+                tx = self.ostium_trading_contract.functions.closeTradeMarketTimeout(
+                    int(order_id), bool(retry)
+                ).build_transaction({'from': account.address})
+            
+            tx['nonce'] = self.get_nonce(account.address)
+            
+            signed_tx = self.web3.eth.account.sign_transaction(
+                tx, private_key=self.private_key)
+            tx_hash = self.web3.eth.send_raw_transaction(
+                signed_tx.raw_transaction)
+            self.log(f"Close Market Timeout TX Hash: {tx_hash.hex()}")
+            
+            receipt = self.web3.eth.wait_for_transaction_receipt(tx_hash)
+            self.log(f"Close Market Timeout successful for order {order_id}")
+            
+            return {
+                'receipt': receipt,
+                'order_id': order_id,
+                'retry': retry
+            }
+            
+        except Exception as e:
+            reason_string, suggestion = fromErrorCodeToMessage(
+                e, verbose=self.verbose)
+            print(
+                f"An error ({str(e)}) occurred during close market timeout - parsed as {reason_string}")
+            raise Exception(
+                f'{reason_string}\n\n{suggestion}' if suggestion != None else reason_string)
+
+    def open_market_timeout(self, order_id, trader_address=None):
+        """
+        Open/execute a trade that has timed out in the market
+        
+        Args:
+            order_id: The ID of the order that has timed out
+            trader_address: Optional address of the trader if different from the account (for delegation)
+        
+        Returns:
+            A dictionary containing the transaction receipt
+        """
+        self.log(f"Opening market timeout for order {order_id}")
+        account = self._get_account()
+        
+        try:
+            if self.use_delegation and trader_address:
+                self.log(
+                    f"Using delegatedAction to open market timeout on behalf of {trader_address}")
+                
+                open_timeout_func = self.ostium_trading_contract.functions.openTradeMarketTimeout(
+                    int(order_id)
+                )
+                
+                inner_encoded_data = open_timeout_func.build_transaction({'gas': 0})['data']
+                
+                tx = self.ostium_trading_contract.functions.delegatedAction(
+                    trader_address, inner_encoded_data
+                ).build_transaction({'from': account.address})
+            else:
+                tx = self.ostium_trading_contract.functions.openTradeMarketTimeout(
+                    int(order_id)
+                ).build_transaction({'from': account.address})
+            
+            tx['nonce'] = self.get_nonce(account.address)
+            
+            signed_tx = self.web3.eth.account.sign_transaction(
+                tx, private_key=self.private_key)
+            tx_hash = self.web3.eth.send_raw_transaction(
+                signed_tx.raw_transaction)
+            self.log(f"Open Market Timeout TX Hash: {tx_hash.hex()}")
+            
+            receipt = self.web3.eth.wait_for_transaction_receipt(tx_hash)
+            self.log(f"Open Market Timeout successful for order {order_id}")
+            
+            return {
+                'receipt': receipt,
+                'order_id': order_id
+            }
+            
+        except Exception as e:
+            reason_string, suggestion = fromErrorCodeToMessage(
+                e, verbose=self.verbose)
+            print(
+                f"An error ({str(e)}) occurred during open market timeout - parsed as {reason_string}")
+            raise Exception(
+                f'{reason_string}\n\n{suggestion}' if suggestion != None else reason_string)
 
     def remove_collateral(self, pair_id, trade_index, remove_amount):
         self.log(

@@ -71,7 +71,7 @@ async def main():
 
     # Specify a builder address that will receive the fee
     builder_address = "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb1"
-    builder_fee_pips = 100  # 100 pips = 0.1%
+    builder_fee_pct = 0.1  # 0.1%
 
     trade_params_with_fee = {
         'collateral': 10,
@@ -79,8 +79,8 @@ async def main():
         'asset_type': 1,              # ETH-USD
         'direction': True,            # Long
         'order_type': 'MARKET',
-        'builder_address': builder_address,  # Address that receives the fee
-        'builder_fee': builder_fee_pips      # 100 pips = 0.1% of the position size
+        'builder_address': builder_address,
+        'builder_fee': builder_fee_pct 
     }
 
     try:
@@ -89,11 +89,11 @@ async def main():
 
         print(f"\nPlacing market order WITH builder fee...")
         print(f"  Builder address: {builder_address}")
-        print(f"  Builder fee: {builder_fee_pips} pips ({builder_fee_pips / 100}%)")
+        print(f"  Builder fee: {builder_fee_pct}%)")
 
         # Calculate approximate fee amount
         position_size = trade_params_with_fee['collateral'] * trade_params_with_fee['leverage']
-        approx_fee = position_size * (builder_fee_pips / 100) / 100
+        approx_fee = position_size * (builder_fee_pct / 100) / 100
         print(f"  Approximate builder fee amount: ${approx_fee:.2f} USDC\n")
 
         trade_result = sdk.ostium.perform_trade(trade_params_with_fee, at_price=latest_price)
@@ -131,13 +131,13 @@ async def main():
         'direction': True,
         'order_type': 'MARKET',
         'builder_address': builder_address,
-        'builder_fee': 1500  # 1.5% - exceeds maximum of 1000 pips (1.0%)
+        'builder_fee': 1.5  # 1.5% - exceeds maximum of 0.5%
     }
 
     try:
         latest_price, _, _ = await sdk.price.get_price("BTC", "USD")
-        print(f"Attempting to place order with builder fee of 1500 pips (1.5%)...")
-        print(f"Maximum allowed: 1000 pips (1.0%)\n")
+        print(f"Attempting to place order with builder fee of 1.5%...")
+        print(f"Maximum allowed: 0.5%\n")
 
         trade_result = sdk.ostium.perform_trade(trade_params_invalid_fee, at_price=latest_price)
 

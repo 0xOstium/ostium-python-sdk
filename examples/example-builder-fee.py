@@ -23,10 +23,10 @@ async def main():
     if not rpc_url:
         raise ValueError("RPC_URL not found in .env file")
 
-    # Initialize with testnet config
-    config = NetworkConfig.mainnet()
+    # Initialize with mainnet config
+    # config = NetworkConfig.mainnet()
     # Or for testnet:
-    # config = NetworkConfig.testnet()
+    config = NetworkConfig.testnet()
 
     # Initialize SDK
     sdk = OstiumSDK(config, private_key, rpc_url, verbose=True)

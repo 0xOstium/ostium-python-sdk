@@ -32,6 +32,11 @@ trading_abi = [
     },
     {
         "inputs": [],
+        "name": "BelowFees",
+        "type": "error"
+    },
+    {
+        "inputs": [],
         "name": "BelowMinLevPos",
         "type": "error"
     },
@@ -1430,69 +1435,6 @@ trading_abi = [
     {
         "inputs": [
             {
-                "internalType": "address",
-                "name": "trader",
-                "type": "address"
-            },
-            {
-                "internalType": "uint16",
-                "name": "pairIndex",
-                "type": "uint16"
-            },
-            {
-                "internalType": "uint8",
-                "name": "index",
-                "type": "uint8"
-            },
-            {
-                "internalType": "enum IOstiumTradingStorage.LimitOrder",
-                "name": "orderType",
-                "type": "uint8"
-            }
-        ],
-        "name": "checkNoPendingTrigger",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "trader",
-                "type": "address"
-            },
-            {
-                "internalType": "uint16",
-                "name": "pairIndex",
-                "type": "uint16"
-            },
-            {
-                "internalType": "uint8",
-                "name": "index",
-                "type": "uint8"
-            }
-        ],
-        "name": "checkNoPendingTriggers",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
                 "internalType": "uint16",
                 "name": "pairIndex",
                 "type": "uint16"
@@ -1506,6 +1448,16 @@ trading_abi = [
                 "internalType": "uint16",
                 "name": "closePercentage",
                 "type": "uint16"
+            },
+            {
+                "internalType": "uint192",
+                "name": "marketPrice",
+                "type": "uint192"
+            },
+            {
+                "internalType": "uint32",
+                "name": "slippageP",
+                "type": "uint32"
             }
         ],
         "name": "closeTradeMarket",
@@ -1752,6 +1704,23 @@ trading_abi = [
                 ],
                 "internalType": "struct IOstiumTradingStorage.Trade",
                 "name": "t",
+                "type": "tuple"
+            },
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "builder",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint32",
+                        "name": "builderFee",
+                        "type": "uint32"
+                    }
+                ],
+                "internalType": "struct IOstiumTradingStorage.BuilderFee",
+                "name": "bf",
                 "type": "tuple"
             },
             {

@@ -22,7 +22,7 @@ if changelog_path.exists():
 
 setup(
     name="ostium-python-sdk",
-    version="2.0.22",
+    version="3.0.0",
     packages=find_packages(),
     install_requires=read_requirements('requirements.txt'),
     extras_require={

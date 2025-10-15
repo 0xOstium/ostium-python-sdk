@@ -5,6 +5,32 @@ All notable changes to the Ostium Python SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2025-10-15
+
+### Breaking Changes
+- **IMPORTANT**: Updated to support new Ostium Protocol contract upgrade
+- `perform_trade()` now includes BuilderFee parameter in contract calls
+- `close_trade()` now requires `market_price` parameter and includes slippage protection
+
+### Added
+- Builder fee support in `perform_trade()` via optional `builder_address` and `builder_fee` parameters
+- Market price parameter in `close_trade()` for accurate slippage calculation
+- Automatic slippage protection when closing trades
+- New test suite for builder fee functionality
+
+### Changed
+- `close_trade()` signature now requires `market_price` as third parameter
+- Contract calls now use updated ABI with BuilderFee struct for `openTrade`
+- Contract calls now use updated ABI with market price and slippage for `closeTradeMarket`
+
+### Migration Guide
+- For `perform_trade()`: No changes needed if not using builder fees (defaults to zero)
+- For `close_trade()`: Must now provide current market price as third parameter
+  ```python
+  # Old: sdk.ostium.close_trade(pair_id, trade_index, close_percentage)
+  # New: sdk.ostium.close_trade(pair_id, trade_index, market_price, close_percentage)
+  ```
+
 ## [2.0.18] - 2025-06-23
 
 - Add delegate support for cancel_limit_order

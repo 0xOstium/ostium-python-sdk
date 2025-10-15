@@ -94,10 +94,42 @@ async def main():
     print(f"\nPreparing to close trade: {direction} {pair_name} (ID: {pair_id}, Index: {trade_index})")
     print(f"Trade ID: {trade_id}")
     print(f"Current status: {'OPEN' if selected_trade.get('isOpen', True) else 'CLOSED'}")
-    
-    # Close the trade (default is 100% close)
-    print(f"\nClosing trade...")
-    close_result = sdk.ostium.close_trade(pair_id, trade_index)
+
+    # Get current market price for the asset
+    asset_from = selected_trade['pair']['from']
+    asset_to = selected_trade['pair']['to']
+    print(f"\nFetching current market price for {asset_from}/{asset_to}...")
+
+    try:
+        current_price, _, _ = await sdk.price.get_price(asset_from, asset_to)
+        current_price_decimal = Decimal(str(current_price))
+        print(f"Current market price: ${current_price_decimal:,.2f}")
+    except Exception as e:
+        print(f"Error fetching price: {e}")
+        return
+
+    # Prompt user for close percentage (optional)
+    try:
+        close_percentage_input = input("\nEnter percentage to close (1-100, default 100 for full close): ").strip()
+        if close_percentage_input:
+            close_percentage = int(close_percentage_input)
+            if close_percentage < 1 or close_percentage > 100:
+                print("Invalid percentage. Must be between 1 and 100.")
+                return
+        else:
+            close_percentage = 100
+    except ValueError:
+        print("Invalid input. Using default 100%")
+        close_percentage = 100
+
+    # Close the trade with the specified percentage
+    print(f"\nClosing {close_percentage}% of the trade at market price ${current_price_decimal:,.2f}...")
+    close_result = sdk.ostium.close_trade(
+        pair_id=pair_id,
+        trade_index=trade_index,
+        market_price=current_price_decimal,
+        close_percentage=close_percentage
+    )
     
     # Extract the order ID from the result
     receipt = close_result['receipt']
@@ -105,9 +137,12 @@ async def main():
     if not order_id:
         print("Failed to get order ID from close trade transaction")
         return
-    
-    print(f"Trade close order submitted with order ID: {order_id}")
-    print(f"Transaction hash: {receipt['transactionHash'].hex()}")
+
+    print(f"\n✓ Close order submitted successfully!")
+    print(f"  Order ID: {order_id}")
+    print(f"  Transaction hash: {receipt['transactionHash'].hex()}")
+    print(f"  Close percentage: {close_percentage}%")
+    print(f"  Gas used: {receipt['gasUsed']}")
     
     # Track the order until it's processed and get the resulting trade
     print("\nTracking order status...")
@@ -115,45 +150,52 @@ async def main():
     
     if result['order']:
         order = result['order']
-        print("\nOrder details:")
+        print("\n✓ Order details:")
         print(f"  Status: {'Pending' if order.get('isPending', True) else 'Processed'}")
         print(f"  Order action: {order.get('orderAction', 'N/A')}")
         print(f"  Order type: {order.get('orderType', 'N/A')}")
         print(f"  Cancelled: {order.get('isCancelled', False)}")
-        
+
         if order.get('isCancelled', False):
             print(f"  Cancel reason: {order.get('cancelReason', 'Unknown')}")
-        
+
+        if 'closePercent' in order:
+            print(f"  Close percentage: {order['closePercent']}%")
+
         if 'price' in order:
-            print(f"  Price: ${float(order['price']):,.2f}")
-        
+            print(f"  Execution price: ${float(order['price']):,.2f}")
+
         if 'profitPercent' in order:
-            print(f"  Profit percent: {order['profitPercent']}%")
-        
+            profit_sign = "+" if order['profitPercent'] > 0 else ""
+            print(f"  Profit: {profit_sign}{order['profitPercent']:.2f}%")
+
         if 'amountSentToTrader' in order:
-            print(f"  Amount sent to trader: {order['amountSentToTrader']} USDC")
+            print(f"  Amount returned to trader: ${order['amountSentToTrader']:.2f} USDC")
         
         if result['trade']:
             trade = result['trade']
-            print("\nTrade details:")
+            is_open = trade.get('isOpen', True)
+            print(f"\n✓ Trade status after close:")
             print(f"  Trade ID: {trade.get('id') or trade.get('tradeID', 'N/A')}")
-            print(f"  Status: {'OPEN' if trade.get('isOpen', True) else 'CLOSED'}")
-            print(f"  Collateral: {trade.get('collateral', 'N/A')} USDC")
-            print(f"  Leverage: {trade.get('leverage', 'N/A')}x")
-            print(f"  Direction: {'Long' if trade.get('isBuy', True) else 'Short'}")
-            
+            print(f"  Status: {'OPEN (partially closed)' if is_open else 'FULLY CLOSED'}")
+
+            if is_open:
+                print(f"  Remaining collateral: ${trade.get('collateral', 0):.2f} USDC")
+                print(f"  Current leverage: {trade.get('leverage', 0):.2f}x")
+                print(f"  Direction: {'Long' if trade.get('isBuy', True) else 'Short'}")
+
             if 'openPrice' in trade:
-                print(f"  Open Price: ${float(trade['openPrice']):,.2f}")
-            
+                print(f"  Original open price: ${float(trade['openPrice']):,.2f}")
+
             if 'closePrice' in trade and trade['closePrice']:
-                print(f"  Close Price: ${float(trade['closePrice']):,.2f}")
-            
+                print(f"  Close price: ${float(trade['closePrice']):,.2f}")
+
             # Show fees if available
             if 'fundingFee' in order:
-                print(f"  Funding Fee: {order.get('fundingFee', 'N/A')} USDC")
-            
+                print(f"  Funding fee: ${order.get('fundingFee', 0):.2f} USDC")
+
             if 'rolloverFee' in order:
-                print(f"  Rollover Fee: {order.get('rolloverFee', 'N/A')} USDC")
+                print(f"  Rollover fee: ${order.get('rolloverFee', 0):.2f} USDC")
         else:
             print("\nNo trade details found (order may be pending or cancelled)")
     else:

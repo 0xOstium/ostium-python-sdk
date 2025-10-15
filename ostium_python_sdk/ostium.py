@@ -1,3 +1,4 @@
+import decimal
 import traceback
 import asyncio
 from decimal import Decimal
@@ -130,6 +131,29 @@ class Ostium:
                     raise Exception('Invalid order type')
 
             slippage = int(self.slippage_percentage * PRECISION_2)
+            
+            # Create BuilderFee struct with default values (zero address and zero fee)
+            # Can be customized if builder fees are needed in the future
+            builder_fee = {
+                'builder': '0x0000000000000000000000000000000000000000',  # Zero address
+                'builderFee': 0  # Zero fee
+            }
+            
+            # Check if custom builder fee is provided in trade_params
+            if 'builder_address' in trade_params and 'builder_fee' in trade_params:
+
+                if not self.web3.is_address(trade_params['builder_address']):
+                    raise Exception('Invalid builder address format')
+                
+                if trade_params['builder_fee'] > 1000:
+                    raise Exception('Builder fee too high: Max 1000 (1%)')
+                if isinstance(trade_params['builder_fee'], float):
+                    raise Exception('Builder fee cannot have decimals')
+                
+                builder_fee = {
+                    'builder': trade_params['builder_address'],
+                    'builderFee': convert_to_scaled_integer(trade_params['builder_fee'], precision=0, scale=3)
+                }
 
             if self.use_delegation and 'trader_address' in trade_params:
                 # Use delegatedAction when delegation is enabled
@@ -138,9 +162,9 @@ class Ostium:
                     f"Using delegatedAction to trade on behalf of {trader_address}")
 
                 # The correct way to encode the function call in Web3.py
-                # Create the function object for openTrade
+                # Create the function object for openTrade with BuilderFee parameter
                 open_trade_func = self.ostium_trading_contract.functions.openTrade(
-                    trade, order_type, slippage
+                    trade, builder_fee, order_type, slippage
                 )
 
                 # Get the encoded data for the openTrade function call
@@ -152,9 +176,9 @@ class Ostium:
                     trader_address, inner_encoded_data
                 ).build_transaction({'from': account.address})
             else:
-                # Standard direct function call (no delegation)
+                # Standard direct function call (no delegation) with BuilderFee parameter
                 trade_tx = self.ostium_trading_contract.functions.openTrade(
-                    trade, order_type, slippage
+                    trade, builder_fee, order_type, slippage
                 ).build_transaction({'from': account.address})
 
             trade_tx['nonce'] = self.get_nonce(account.address)
@@ -241,13 +265,14 @@ class Ostium:
             raise Exception(
                 f'{reason_string}\n\n{suggestion}' if suggestion != None else reason_string)
 
-    def close_trade(self, pair_id, trade_index, close_percentage=100, trader_address=None):
+    def close_trade(self, pair_id, trade_index, market_price, close_percentage=100, trader_address=None):
         """
         Close a trade partially or completely
 
         Args:
             pair_id: The ID of the trading pair
             trade_index: The index of the trade
+            market_price: The current market price for the trade
             close_percentage: The percentage of the position to close (1-100, default: 100)
             trader_address: Optional address of the trader if different from the account (for delegation)
 
@@ -258,15 +283,22 @@ class Ostium:
         account = self._get_account()
 
         close_percentage = to_base_units(close_percentage, decimals=2)
+        
+        # Convert market price to the correct format (uint192)
+        market_price_scaled = convert_to_scaled_integer(market_price)
+        
+        # Calculate slippage using the same percentage as for opening trades
+        slippage = int(self.slippage_percentage * PRECISION_2)
 
         if self.use_delegation and trader_address:
             self.log(
                 f"Using delegatedAction to close trade on behalf of {trader_address}")
 
             # The correct way to encode the function call in Web3.py
-            # Create the function object for closeTradeMarket
+            # Create the function object for closeTradeMarket with new parameters
             close_trade_func = self.ostium_trading_contract.functions.closeTradeMarket(
-                int(pair_id), int(trade_index), int(close_percentage)
+                int(pair_id), int(trade_index), int(close_percentage), 
+                market_price_scaled, slippage
             )
 
             # Get the encoded data for the closeTradeMarket function call
@@ -278,9 +310,10 @@ class Ostium:
                 trader_address, inner_encoded_data
             ).build_transaction({'from': account.address})
         else:
-            # Standard direct function call (no delegation)
+            # Standard direct function call (no delegation) with new parameters
             trade_tx = self.ostium_trading_contract.functions.closeTradeMarket(
-                int(pair_id), int(trade_index), int(close_percentage)
+                int(pair_id), int(trade_index), int(close_percentage),
+                market_price_scaled, slippage
             ).build_transaction({'from': account.address})
 
         trade_tx['nonce'] = self.get_nonce(account.address)

@@ -184,7 +184,7 @@ class Ostium:
             signed_tx = self.web3.eth.account.sign_transaction(
                 trade_tx, private_key=self.private_key)
             trade_tx_hash = self.web3.eth.send_raw_transaction(
-                signed_tx.raw_transaction)
+                signed_tx.rawTransaction)
             trade_receipt = self.web3.eth.wait_for_transaction_receipt(
                 trade_tx_hash)
             # self.log(f"Order Receipt: {trade_receipt}")
@@ -247,7 +247,7 @@ class Ostium:
             signed_tx = self.web3.eth.account.sign_transaction(
                 trade_tx, private_key=self.private_key)
             trade_tx_hash = self.web3.eth.send_raw_transaction(
-                signed_tx.raw_transaction)
+                signed_tx.rawTransaction)
             self.log(f"Cancel Limit Order TX Hash: {trade_tx_hash.hex()}")
 
             trade_receipt = self.web3.eth.wait_for_transaction_receipt(
@@ -319,7 +319,7 @@ class Ostium:
         signed_tx = self.web3.eth.account.sign_transaction(
             trade_tx, private_key=self.private_key)
         trade_tx_hash = self.web3.eth.send_raw_transaction(
-            signed_tx.raw_transaction)
+            signed_tx.rawTransaction)
         self.log(f"Trade TX Hash: {trade_tx_hash.hex()}")
 
         trade_receipt = self.web3.eth.wait_for_transaction_receipt(
@@ -384,7 +384,7 @@ class Ostium:
             signed_tx = self.web3.eth.account.sign_transaction(
                 tx, private_key=self.private_key)
             tx_hash = self.web3.eth.send_raw_transaction(
-                signed_tx.raw_transaction)
+                signed_tx.rawTransaction)
             self.log(f"Close Market Timeout TX Hash: {tx_hash.hex()}")
             
             receipt = self.web3.eth.wait_for_transaction_receipt(tx_hash)
@@ -442,7 +442,7 @@ class Ostium:
             signed_tx = self.web3.eth.account.sign_transaction(
                 tx, private_key=self.private_key)
             tx_hash = self.web3.eth.send_raw_transaction(
-                signed_tx.raw_transaction)
+                signed_tx.rawTransaction)
             self.log(f"Open Market Timeout TX Hash: {tx_hash.hex()}")
             
             receipt = self.web3.eth.wait_for_transaction_receipt(tx_hash)
@@ -475,7 +475,7 @@ class Ostium:
         signed_tx = self.web3.eth.account.sign_transaction(
             trade_tx, private_key=self.private_key)
         trade_tx_hash = self.web3.eth.send_raw_transaction(
-            signed_tx.raw_transaction)
+            signed_tx.rawTransaction)
         self.log(f"Remove Collateral TX Hash: {trade_tx_hash.hex()}")
 
         remove_receipt = self.web3.eth.wait_for_transaction_receipt(
@@ -531,7 +531,7 @@ class Ostium:
             signed_tx = self.web3.eth.account.sign_transaction(
                 add_collateral_tx, private_key=self.private_key)
             add_collateral_tx_hash = self.web3.eth.send_raw_transaction(
-                signed_tx.raw_transaction)
+                signed_tx.rawTransaction)
             self.log(f"Add Collateral TX Hash: {add_collateral_tx_hash.hex()}")
 
             add_collateral_receipt = self.web3.eth.wait_for_transaction_receipt(
@@ -592,7 +592,7 @@ class Ostium:
             signed_tx = self.web3.eth.account.sign_transaction(
                 update_tp_tx, private_key=self.private_key)
             update_tp_tx_hash = self.web3.eth.send_raw_transaction(
-                signed_tx.raw_transaction)
+                signed_tx.rawTransaction)
             self.log(f"Update TP TX Hash: {update_tp_tx_hash.hex()}")
 
             update_tp_receipt = self.web3.eth.wait_for_transaction_receipt(
@@ -650,7 +650,7 @@ class Ostium:
             signed_tx = self.web3.eth.account.sign_transaction(
                 update_sl_tx, private_key=self.private_key)
             update_sl_tx_hash = self.web3.eth.send_raw_transaction(
-                signed_tx.raw_transaction)
+                signed_tx.rawTransaction)
             self.log(f"Update SL TX Hash: {update_sl_tx_hash.hex()}")
 
             update_sl_receipt = self.web3.eth.wait_for_transaction_receipt(
@@ -682,7 +682,7 @@ class Ostium:
                 signed_tx = self.web3.eth.account.sign_transaction(
                     approve_tx, private_key=self.private_key)
                 approve_tx_hash = self.web3.eth.send_raw_transaction(
-                    signed_tx.raw_transaction)
+                    signed_tx.rawTransaction)
                 self.log(f"Approval TX Hash: {approve_tx_hash.hex()}")
 
                 approve_receipt = self.web3.eth.wait_for_transaction_receipt(
@@ -711,7 +711,7 @@ class Ostium:
             signed_tx = self.web3.eth.account.sign_transaction(
                 transfer_tx, private_key=self.private_key)
             transfer_tx_hash = self.web3.eth.send_raw_transaction(
-                signed_tx.raw_transaction)
+                signed_tx.rawTransaction)
             self.log(f"Transfer TX Hash: {transfer_tx_hash.hex()}")
 
             transfer_receipt = self.web3.eth.wait_for_transaction_receipt(
@@ -759,7 +759,7 @@ class Ostium:
             signed_tx = self.web3.eth.account.sign_transaction(
                 trade_tx, private_key=account.key)
             trade_tx_hash = self.web3.eth.send_raw_transaction(
-                signed_tx.raw_transaction)
+                signed_tx.rawTransaction)
             self.log(f"Update Limit Order TX Hash: {trade_tx_hash.hex()}")
 
             trade_receipt = self.web3.eth.wait_for_transaction_receipt(

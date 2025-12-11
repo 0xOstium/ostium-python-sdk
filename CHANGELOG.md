@@ -5,6 +5,11 @@ All notable changes to the Ostium Python SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.1] - 2025-12-11
+### Changed
+- Updated the mainnet and testnet subgraph endpoints from Alchemy to secondary endpoints from Goldsky
+
+
 ## [3.0.0] - 2025-10-15
 
 ### Breaking Changes

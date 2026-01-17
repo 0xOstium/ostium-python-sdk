@@ -440,3 +440,75 @@ class SubgraphClient:
         if result and 'trades' in result and len(result['trades']) > 0:
             return result['trades'][0]
         return None
+
+    async def get_closed_trade_by_trade_id(self, trade_id):
+        """
+        Get closed orders for a specific trade ID (orderAction: "Close" and isCancelled: false)
+        """
+        query = gql(
+            """
+            query GetClosedTradeByTradeID($trade_id: String!) {
+              orders(
+                where: {tradeID: $trade_id, orderAction: "Close", isCancelled: false}
+                orderBy: executedAt
+                orderDirection: desc
+              ) {
+                id
+                isBuy
+                profitPercent
+                tradeID
+                trader
+                isCancelled
+                closePercent
+                executedAt
+                orderAction
+                cancelReason
+                price
+                tradeNotional
+                executedTx
+              }
+            }
+            """
+        )
+
+        result = await self._execute_query(query, variable_values={"trade_id": str(trade_id)})
+
+        if result and 'orders' in result:
+            return result['orders']
+        return []
+
+    async def get_cancelled_orders_by_trade_id(self, trade_id):
+        """
+        Get cancelled orders for a specific trade ID (isCancelled: true)
+        """
+        query = gql(
+            """
+            query GetCancelledOrderByTradeID($trade_id: String!) {
+              orders(
+                where: {tradeID: $trade_id, isCancelled: true}
+                orderBy: executedAt
+                orderDirection: desc
+              ) {
+                id
+                isBuy
+                profitPercent
+                tradeID
+                trader
+                isCancelled
+                closePercent
+                executedAt
+                orderAction
+                cancelReason
+                price
+                tradeNotional
+                executedTx
+              }
+            }
+            """
+        )
+
+        result = await self._execute_query(query, variable_values={"trade_id": str(trade_id)})
+
+        if result and 'orders' in result:
+            return result['orders']
+        return []

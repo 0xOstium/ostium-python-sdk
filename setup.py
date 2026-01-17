@@ -21,8 +21,8 @@ if changelog_path.exists():
     long_description += "\n\n" + changelog_path.read_text()
 
 setup(
-    name="ostium-python-sdk",
-    version="3.0.0",
+    name="ostium-python-sdk-test",
+    version="3.0.1.4",
     packages=find_packages(),
     install_requires=read_requirements('requirements.txt'),
     extras_require={

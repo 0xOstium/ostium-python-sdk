@@ -14,6 +14,7 @@ from .balance import Balance
 from .price import Price
 from web3 import Web3
 from .ostium import Ostium
+from .vault import OstiumVault
 from .config import NetworkConfig
 from typing import Union
 from .subgraph import SubgraphClient
@@ -73,6 +74,15 @@ class OstiumSDK:
             private_key=self.private_key,
             verbose=self.verbose,
             use_delegation=self.use_delegation
+        )
+
+        # Initialize vault instance
+        self.vault = OstiumVault(
+            self.w3,
+            self.network_config.contracts["vault"],
+            self.network_config.contracts["usdc"],
+            private_key=self.private_key,
+            verbose=self.verbose
         )
 
         # Initialize subgraph client

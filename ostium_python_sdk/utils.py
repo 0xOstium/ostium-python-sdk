@@ -2,6 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from web3 import Web3
 from ast import literal_eval
+from eth_account.account import Account
 
 from .constants import MAX_PROFIT_P, MAX_STOP_LOSS_P
 
@@ -141,15 +142,33 @@ def fromErrorCodeToMessage(error_code, verbose=False):
         "35fe85c5": "WrongLeverage(uint32)",
         "5863f789": "WrongParams()",
         "083fbd78": "WrongSL()",
-        "a41bb918": "WrongTP()"
+        "a41bb918": "WrongTP()",
+        "6bcd09d8": "PendingWithdrawal(address,uint256)",
+        "f0f4c3e2": "AboveBalance()",
+        "d2eecb0b": "AboveMaxDeposit()",
+        "a0c0c8a1": "AboveMaxMint()",
+        "b1f8100d": "AboveWithdrawAmount()",
+        "e1c7392a": "DepositNotUnlocked(uint256)",
+        "4f1ef286": "NotEnoughAssets()",
+        "f7b7c3c6": "WaitNextEpochStart()",
+        "a6f9dae1": "NullAmount()",
+        "b1f8100d": "NullPrice()",
+        "d2eecb0b": "MaxDailyPnlReached()",
+        "a0c0c8a1": "NoActiveDiscount()",
+        "f0f4c3e2": "NoDiscount()",
+        "0efd6122": "WaitNextEpochStart()",
+        "3d093e84": "ERC20InsufficientAllowance(address,uint256,uint256)",
+        "4a67a8d2": "MathOverflowedMulDiv()"
     }
 
     # Search for any of the known error hashes within the error_code string
     for hash_code, error_message in error_map.items():
+        # if verbose:
+        #     print('checking', hash_code, 'in', str(error_code))
         if hash_code in str(error_code):
             ret = error_message
-            if verbose:
-                print('----->fromErrorCodeToMessage(error_code) returns', ret)
+            # if verbose:
+            #     print('FOUND THE ERROR', ret)
             return str(ret), None
 
     # If we couldn't find the error in error_map, try to parse the error
@@ -217,5 +236,64 @@ def convert_decimals(obj):
     elif isinstance(obj, Decimal):
         return str(obj)  # or float(obj) if you prefer
     return obj
+
+
+def approve_usdc(w3: Web3, usdc_contract, spender_address: str, amount: int, private_key: str, verbose: bool = False) -> dict:
+    """
+    Approve USDC spending for any contract.
+
+    Args:
+        w3: Web3 instance
+        usdc_contract: USDC contract instance
+        spender_address: Address of the contract to approve
+        amount: Amount to approve in base units
+        private_key: Private key for transaction signing
+        verbose: Whether to log detailed information
+
+    Returns:
+        Transaction receipt
+    """
+    if verbose:
+        print(f"Approving {amount} USDC for {spender_address}")
+
+    account = Account.from_key(private_key)
+
+    # Build and send approval transaction
+    tx = usdc_contract.functions.approve(
+        spender_address,
+        amount
+    ).build_transaction({
+        'from': account.address,
+        'nonce': w3.eth.get_transaction_count(account.address)
+    })
+
+    signed_tx = w3.eth.account.sign_transaction(tx, private_key)
+    tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+    receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+
+    if verbose:
+        print(
+            f"Approval successful! Transaction hash: {receipt['transactionHash'].hex()}")
+
+    return receipt
+
+
+def get_account(w3: Web3, private_key: str) -> Account:
+    """
+    Get an Ethereum account from a private key.
+
+    Args:
+        w3: Web3 instance
+        private_key: Private key for the account
+
+    Returns:
+        Account instance
+
+    Raises:
+        ValueError: If private key is not provided
+    """
+    if not private_key:
+        raise ValueError("Private key is required for this operation")
+    return Account.from_key(private_key)
 
 # timestamp is a string in seconds as returned from graph

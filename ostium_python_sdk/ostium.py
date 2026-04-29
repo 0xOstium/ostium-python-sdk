@@ -195,17 +195,15 @@ class Ostium:
             # self.log(f"Order Receipt: {trade_receipt}")
 
             # Extract orderId from logs
+            # Contract emits MarketOpenOrderInitiated(orderId, trader, pairIndex) — all indexed
             order_id = None
+            market_open_signature = self.web3.keccak(
+                text="MarketOpenOrderInitiated(uint256,address,uint16)").hex()
             for log in trade_receipt.logs:
-                # Define PriceRequested event signature
-                price_requested_signature = self.web3.keccak(
-                    text="PriceRequested(uint256,bytes32,uint256)").hex()
-
-                # Look at the event topic to identify the event type
-                if len(log['topics']) > 0 and log['topics'][0].hex() == price_requested_signature:
-                    # orderId is the indexed parameter (second topic)
+                if len(log['topics']) > 0 and log['topics'][0].hex() == market_open_signature:
+                    # orderId is the first indexed parameter (second topic)
                     order_id = int(log['topics'][1].hex(), 16)
-                    self.log(f"Found orderId from PriceRequested: {order_id}")
+                    self.log(f"Found orderId from MarketOpenOrderInitiated: {order_id}")
                     break
 
             return {
@@ -332,17 +330,15 @@ class Ostium:
         # self.log(f"Trade Receipt: {trade_receipt}")
 
         # Extract orderId from logs
+        # Contract emits MarketCloseOrderInitiated(orderId, tradeId, trader, pairIndex) — all indexed
         order_id = None
+        market_close_signature = self.web3.keccak(
+            text="MarketCloseOrderInitiated(uint256,uint256,address,uint16)").hex()
         for log in trade_receipt.logs:
-            # Define PriceRequested event signature
-            price_requested_signature = self.web3.keccak(
-                text="PriceRequested(uint256,bytes32,uint256)").hex()
-
-            # Look at the event topic to identify the event type
-            if len(log['topics']) > 0 and log['topics'][0].hex() == price_requested_signature:
-                # orderId is the indexed parameter (second topic)
+            if len(log['topics']) > 0 and log['topics'][0].hex() == market_close_signature:
+                # orderId is the first indexed parameter (second topic)
                 order_id = int(log['topics'][1].hex(), 16)
-                self.log(f"Found orderId from PriceRequested: {order_id}")
+                self.log(f"Found orderId from MarketCloseOrderInitiated: {order_id}")
                 break
 
         return {

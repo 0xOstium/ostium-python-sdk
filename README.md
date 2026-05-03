@@ -7,7 +7,7 @@ Track all notable changes, updates, and improvements to the Ostium Python SDK in
 
 A python based SDK developed for interacting with Ostium v1 Trading Platform (https://ostium.app/)
 
-Ostium is a decentralized perpetuals exchange on Arbitrum (Ethereum L2) with a focus on providing a seamless experience for traders for trading currencies, commodities, indices, crypto and more.
+Ostium is the onchain gateway to the world’s most liquid global markets. It offers perpetual-instrument exposure to 71 trading pairs across Stocks, ETFs, Commodities, Indices, Forex, and Crypto, with up to 200x leverage, instant settlement in USDC, self-custody, and full transparency on every fill.
 
 This SDK is designed to be used by developers who want to build applications on top of Ostium and automate their trading strategies.
 

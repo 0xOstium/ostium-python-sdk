@@ -20,7 +20,7 @@ from .subgraph import SubgraphClient
 
 
 class OstiumSDK:
-    def __init__(self, network: Union[str, NetworkConfig], private_key: str = None, rpc_url: str = None, verbose=False, use_delegation=False):
+    def __init__(self, network: Union[str, NetworkConfig], private_key: str = None, rpc_url: str = None, verbose=False, use_delegation=False, submit_rpc_url=None):
         self.verbose = verbose
         load_dotenv()
         self.private_key = private_key or os.getenv('PRIVATE_KEY')
@@ -73,7 +73,8 @@ class OstiumSDK:
             private_key=self.private_key,
             verbose=self.verbose,
             use_delegation=self.use_delegation,
-            chain_id=actual_chain_id
+            chain_id=actual_chain_id,
+            submit_rpc_url=submit_rpc_url
         )
 
         # Initialize subgraph client

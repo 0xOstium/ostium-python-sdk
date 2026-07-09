@@ -72,7 +72,8 @@ class OstiumSDK:
             self.network_config.contracts["trading"],
             private_key=self.private_key,
             verbose=self.verbose,
-            use_delegation=self.use_delegation
+            use_delegation=self.use_delegation,
+            chain_id=actual_chain_id
         )
 
         # Initialize subgraph client

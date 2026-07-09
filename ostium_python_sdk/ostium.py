@@ -1,6 +1,7 @@
 import decimal
 import traceback
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from decimal import Decimal
 from enum import Enum
 from ostium_python_sdk.constants import PRECISION_2
@@ -16,6 +17,13 @@ class OpenOrderType(Enum):
     MARKET = 0
     LIMIT = 1
     STOP = 2
+
+
+# Emitted by the OstiumPriceUpKeep (oracle) contract for every order that
+# requests a price (opens, closes, etc.); orderId is the indexed topic.
+# Replaced the old PriceRequested(uint256,bytes32,uint256) event.
+PRICE_REQUESTED_V2_TOPIC = Web3.keccak(
+    text="PriceRequestedV2(uint256,uint8,bytes32,uint256)")
 
 
 class Ostium:
@@ -44,7 +52,7 @@ class Ostium:
         5. The trader address must have approved enough USDC allowance for the trading contract
     """
 
-    def __init__(self, w3: Web3, usdc_address: str, ostium_trading_storage_address: str, ostium_trading_address: str, private_key: str, verbose=False, use_delegation=False) -> None:
+    def __init__(self, w3: Web3, usdc_address: str, ostium_trading_storage_address: str, ostium_trading_address: str, private_key: str, verbose=False, use_delegation=False, chain_id=None) -> None:
         self.web3 = w3
         self.verbose = verbose
         self.private_key = private_key
@@ -61,6 +69,16 @@ class Ostium:
             address=self.ostium_trading_address, abi=trading_abi)
 
         self.slippage_percentage = 2  # 2%
+
+        # Transactions are built fully offline to avoid per-trade RPC
+        # round-trips (chainId, eth_estimateGas, fee history). Gas limit is an
+        # upper bound only - Arbitrum refunds unused gas. Fee caps reserve
+        # balance but the actual charge is the network base fee.
+        self._chain_id = chain_id
+        self.gas_limit = 2_500_000
+        self.max_fee_per_gas = Web3.to_wei('0.5', 'gwei')
+        self.max_priority_fee_per_gas = 0
+        self._allowance_cache = {}
 
     def log(self, message):
         if self.verbose:
@@ -90,6 +108,64 @@ class Ostium:
     def get_nonce(self, address):
         return self.web3.eth.get_transaction_count(address)
 
+    @property
+    def chain_id(self):
+        if self._chain_id is None:
+            self._chain_id = self.web3.eth.chain_id
+        return self._chain_id
+
+    def _extract_order_id(self, receipt, fallback_event_names):
+        """
+        Pull the orderId out of a receipt. Primary source is the oracle's
+        PriceRequestedV2 event (successor of PriceRequested), which is emitted
+        for every price-requesting order with orderId as the indexed topic.
+        Falls back to decoding the trading contract's order-initiated events.
+        """
+        for log in receipt.logs:
+            if len(log['topics']) > 1 and bytes(log['topics'][0]) == bytes(PRICE_REQUESTED_V2_TOPIC):
+                order_id = int(log['topics'][1].hex(), 16)
+                self.log(f"Found orderId from PriceRequestedV2: {order_id}")
+                return order_id
+
+        from web3.logs import DISCARD
+        for name in fallback_event_names:
+            event = getattr(self.ostium_trading_contract.events, name, None)
+            if event is None:
+                continue
+            entries = event().process_receipt(receipt, errors=DISCARD)
+            if entries:
+                order_id = entries[0]['args']['orderId']
+                self.log(f"Found orderId from {name}: {order_id}")
+                return order_id
+
+        self.log("No order-initiated event found in receipt")
+        return None
+
+    def _encode_trading_call(self, fn_name, args):
+        """Encode a trading-contract call locally (no RPC round-trips).
+        web3 v7 renamed encodeABI to encode_abi; support both."""
+        contract = self.ostium_trading_contract
+        if hasattr(contract, 'encode_abi'):
+            return contract.encode_abi(fn_name, args)
+        return contract.encodeABI(fn_name, args)
+
+    def _build_tx_params(self, account, nonce=None):
+        """
+        Transaction fields for build_transaction. Supplying chainId, gas and
+        fee caps here keeps web3 from fetching each of them over RPC on every
+        transaction; the nonce is the only per-transaction chain read.
+        """
+        if nonce is None:
+            nonce = self.get_nonce(account.address)
+        return {
+            'from': account.address,
+            'chainId': self.chain_id,
+            'gas': self.gas_limit,
+            'maxFeePerGas': self.max_fee_per_gas,
+            'maxPriorityFeePerGas': self.max_priority_fee_per_gas,
+            'nonce': nonce,
+        }
+
     def _check_private_key(self):
         if not self.private_key:
             raise ValueError(
@@ -99,8 +175,19 @@ class Ostium:
         self.log(f"Performing trade with params: {trade_params}")
         account = self._get_account()
         amount = to_base_units(trade_params['collateral'], decimals=6)
-        self.__approve(account, amount, self.use_delegation,
-                       trade_params.get('trader_address'))
+
+        # Nonce and allowance are independent chain reads - fetch concurrently
+        owner = self._allowance_owner(
+            account, trade_params.get('trader_address'))
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            nonce_future = executor.submit(self.get_nonce, account.address)
+            allowance_future = executor.submit(
+                self._check_allowance, owner, amount)
+            nonce = nonce_future.result()
+            allowance_future.result()
+
+        nonce = self.__approve(account, amount, self.use_delegation,
+                               trade_params.get('trader_address'), nonce=nonce)
 
         try:
             self.log(f"Final trade parameters being sent: {trade_params}")
@@ -164,27 +251,19 @@ class Ostium:
                 self.log(
                     f"Using delegatedAction to trade on behalf of {trader_address}")
 
-                # The correct way to encode the function call in Web3.py
-                # Create the function object for openTrade with BuilderFee parameter
-                open_trade_func = self.ostium_trading_contract.functions.openTrade(
-                    trade, builder_fee, order_type, slippage
-                )
-
-                # Get the encoded data for the openTrade function call
-                inner_encoded_data = open_trade_func.build_transaction({'gas': 0})[
-                    'data']
+                # Encode the openTrade call locally (no RPC round-trips)
+                inner_encoded_data = self._encode_trading_call(
+                    fn_name='openTrade', args=[trade, builder_fee, order_type, slippage])
 
                 # Create the outer delegatedAction transaction
                 trade_tx = self.ostium_trading_contract.functions.delegatedAction(
                     trader_address, inner_encoded_data
-                ).build_transaction({'from': account.address})
+                ).build_transaction(self._build_tx_params(account, nonce=nonce))
             else:
                 # Standard direct function call (no delegation) with BuilderFee parameter
                 trade_tx = self.ostium_trading_contract.functions.openTrade(
                     trade, builder_fee, order_type, slippage
-                ).build_transaction({'from': account.address})
-
-            trade_tx['nonce'] = self.get_nonce(account.address)
+                ).build_transaction(self._build_tx_params(account, nonce=nonce))
 
             signed_tx = self.web3.eth.account.sign_transaction(
                 trade_tx, private_key=self.private_key)
@@ -194,19 +273,8 @@ class Ostium:
                 trade_tx_hash)
             # self.log(f"Order Receipt: {trade_receipt}")
 
-            # Extract orderId from logs
-            order_id = None
-            for log in trade_receipt.logs:
-                # Define PriceRequested event signature
-                price_requested_signature = self.web3.keccak(
-                    text="PriceRequested(uint256,bytes32,uint256)").hex()
-
-                # Look at the event topic to identify the event type
-                if len(log['topics']) > 0 and log['topics'][0].hex() == price_requested_signature:
-                    # orderId is the indexed parameter (second topic)
-                    order_id = int(log['topics'][1].hex(), 16)
-                    self.log(f"Found orderId from PriceRequested: {order_id}")
-                    break
+            order_id = self._extract_order_id(
+                trade_receipt, ['MarketOpenOrderInitiated'])
 
             return {
                 'receipt': trade_receipt,
@@ -229,25 +297,17 @@ class Ostium:
                 self.log(
                     f"Using delegatedAction to cancel limit order on behalf of {trader_address}")
 
-                # The correct way to encode the function call in Web3.py
-                # Create the function object for closeTradeMarket
-                cancel_limit_func = self.ostium_trading_contract.functions.cancelOpenLimitOrder(
-                    int(pair_id), int(trade_index)
-                )
-
-                # Get the encoded data for the closeTradeMarket function call
-                inner_encoded_data = cancel_limit_func.build_transaction({'gas': 0})[
-                    'data']
+                # Encode the cancelOpenLimitOrder call locally (no RPC round-trips)
+                inner_encoded_data = self._encode_trading_call(
+                    fn_name='cancelOpenLimitOrder', args=[int(pair_id), int(trade_index)])
 
                 # Create the outer delegatedAction transaction
                 trade_tx = self.ostium_trading_contract.functions.delegatedAction(
                     trader_address, inner_encoded_data
-                ).build_transaction({'from': account.address})
+                ).build_transaction(self._build_tx_params(account))
             else:
                 trade_tx = self.ostium_trading_contract.functions.cancelOpenLimitOrder(
-                    int(pair_id), int(trade_index)).build_transaction({'from': account.address})
-
-            trade_tx['nonce'] = self.get_nonce(account.address)
+                    int(pair_id), int(trade_index)).build_transaction(self._build_tx_params(account))
 
             signed_tx = self.web3.eth.account.sign_transaction(
                 trade_tx, private_key=self.private_key)
@@ -297,29 +357,22 @@ class Ostium:
             self.log(
                 f"Using delegatedAction to close trade on behalf of {trader_address}")
 
-            # The correct way to encode the function call in Web3.py
-            # Create the function object for closeTradeMarket with new parameters
-            close_trade_func = self.ostium_trading_contract.functions.closeTradeMarket(
-                int(pair_id), int(trade_index), int(close_percentage), 
-                market_price_scaled, slippage
-            )
-
-            # Get the encoded data for the closeTradeMarket function call
-            inner_encoded_data = close_trade_func.build_transaction({'gas': 0})[
-                'data']
+            # Encode the closeTradeMarket call locally (no RPC round-trips)
+            inner_encoded_data = self._encode_trading_call(
+                fn_name='closeTradeMarket',
+                args=[int(pair_id), int(trade_index), int(close_percentage),
+                      market_price_scaled, slippage])
 
             # Create the outer delegatedAction transaction
             trade_tx = self.ostium_trading_contract.functions.delegatedAction(
                 trader_address, inner_encoded_data
-            ).build_transaction({'from': account.address})
+            ).build_transaction(self._build_tx_params(account))
         else:
             # Standard direct function call (no delegation) with new parameters
             trade_tx = self.ostium_trading_contract.functions.closeTradeMarket(
                 int(pair_id), int(trade_index), int(close_percentage),
                 market_price_scaled, slippage
-            ).build_transaction({'from': account.address})
-
-        trade_tx['nonce'] = self.get_nonce(account.address)
+            ).build_transaction(self._build_tx_params(account))
 
         signed_tx = self.web3.eth.account.sign_transaction(
             trade_tx, private_key=self.private_key)
@@ -331,19 +384,8 @@ class Ostium:
             trade_tx_hash)
         # self.log(f"Trade Receipt: {trade_receipt}")
 
-        # Extract orderId from logs
-        order_id = None
-        for log in trade_receipt.logs:
-            # Define PriceRequested event signature
-            price_requested_signature = self.web3.keccak(
-                text="PriceRequested(uint256,bytes32,uint256)").hex()
-
-            # Look at the event topic to identify the event type
-            if len(log['topics']) > 0 and log['topics'][0].hex() == price_requested_signature:
-                # orderId is the indexed parameter (second topic)
-                order_id = int(log['topics'][1].hex(), 16)
-                self.log(f"Found orderId from PriceRequested: {order_id}")
-                break
+        order_id = self._extract_order_id(
+            trade_receipt, ['MarketCloseOrderInitiatedV2', 'MarketCloseOrderInitiated'])
 
         return {
             'receipt': trade_receipt,
@@ -370,22 +412,18 @@ class Ostium:
                 self.log(
                     f"Using delegatedAction to close market timeout on behalf of {trader_address}")
                 
-                close_market_timeout_func = self.ostium_trading_contract.functions.closeTradeMarketTimeout(
-                    int(order_id), bool(retry)
-                )
-                
-                inner_encoded_data = close_market_timeout_func.build_transaction({'gas': 0})['data']
-                
+                # Encode the closeTradeMarketTimeout call locally (no RPC round-trips)
+                inner_encoded_data = self._encode_trading_call(
+                    fn_name='closeTradeMarketTimeout', args=[int(order_id), bool(retry)])
+
                 tx = self.ostium_trading_contract.functions.delegatedAction(
                     trader_address, inner_encoded_data
-                ).build_transaction({'from': account.address})
+                ).build_transaction(self._build_tx_params(account))
             else:
                 tx = self.ostium_trading_contract.functions.closeTradeMarketTimeout(
                     int(order_id), bool(retry)
-                ).build_transaction({'from': account.address})
-            
-            tx['nonce'] = self.get_nonce(account.address)
-            
+                ).build_transaction(self._build_tx_params(account))
+
             signed_tx = self.web3.eth.account.sign_transaction(
                 tx, private_key=self.private_key)
             tx_hash = self.web3.eth.send_raw_transaction(
@@ -428,22 +466,18 @@ class Ostium:
                 self.log(
                     f"Using delegatedAction to open market timeout on behalf of {trader_address}")
                 
-                open_timeout_func = self.ostium_trading_contract.functions.openTradeMarketTimeout(
-                    int(order_id)
-                )
-                
-                inner_encoded_data = open_timeout_func.build_transaction({'gas': 0})['data']
-                
+                # Encode the openTradeMarketTimeout call locally (no RPC round-trips)
+                inner_encoded_data = self._encode_trading_call(
+                    fn_name='openTradeMarketTimeout', args=[int(order_id)])
+
                 tx = self.ostium_trading_contract.functions.delegatedAction(
                     trader_address, inner_encoded_data
-                ).build_transaction({'from': account.address})
+                ).build_transaction(self._build_tx_params(account))
             else:
                 tx = self.ostium_trading_contract.functions.openTradeMarketTimeout(
                     int(order_id)
-                ).build_transaction({'from': account.address})
-            
-            tx['nonce'] = self.get_nonce(account.address)
-            
+                ).build_transaction(self._build_tx_params(account))
+
             signed_tx = self.web3.eth.account.sign_transaction(
                 tx, private_key=self.private_key)
             tx_hash = self.web3.eth.send_raw_transaction(
@@ -474,8 +508,7 @@ class Ostium:
         amount = to_base_units(remove_amount, decimals=6)
 
         trade_tx = self.ostium_trading_contract.functions.removeCollateral(
-            int(pair_id), int(trade_index), int(amount)).build_transaction({'from': account.address})
-        trade_tx['nonce'] = self.get_nonce(account.address)
+            int(pair_id), int(trade_index), int(amount)).build_transaction(self._build_tx_params(account))
 
         signed_tx = self.web3.eth.account.sign_transaction(
             trade_tx, private_key=self.private_key)
@@ -504,34 +537,27 @@ class Ostium:
         account = self._get_account()
         try:
             amount = to_base_units(collateral, decimals=6)
-            self.__approve(account, amount,
-                           self.use_delegation, trader_address)
+            nonce = self.get_nonce(account.address)
+            nonce = self.__approve(account, amount,
+                                   self.use_delegation, trader_address, nonce=nonce)
 
             if self.use_delegation and trader_address:
                 self.log(
                     f"Using delegatedAction to add collateral on behalf of {trader_address}")
 
-                # The correct way to encode the function call in Web3.py
-                # Create the function object for topUpCollateral
-                top_up_func = self.ostium_trading_contract.functions.topUpCollateral(
-                    int(pairID), int(index), amount
-                )
-
-                # Get the encoded data for the topUpCollateral function call
-                inner_encoded_data = top_up_func.build_transaction({'gas': 0})[
-                    'data']
+                # Encode the topUpCollateral call locally (no RPC round-trips)
+                inner_encoded_data = self._encode_trading_call(
+                    fn_name='topUpCollateral', args=[int(pairID), int(index), amount])
 
                 # Create the outer delegatedAction transaction
                 add_collateral_tx = self.ostium_trading_contract.functions.delegatedAction(
                     trader_address, inner_encoded_data
-                ).build_transaction({'from': account.address})
+                ).build_transaction(self._build_tx_params(account, nonce=nonce))
             else:
                 # Standard direct function call (no delegation)
                 add_collateral_tx = self.ostium_trading_contract.functions.topUpCollateral(
                     int(pairID), int(index), amount
-                ).build_transaction({'from': account.address})
-
-            add_collateral_tx['nonce'] = self.get_nonce(account.address)
+                ).build_transaction(self._build_tx_params(account, nonce=nonce))
 
             signed_tx = self.web3.eth.account.sign_transaction(
                 add_collateral_tx, private_key=self.private_key)
@@ -572,27 +598,19 @@ class Ostium:
                 self.log(
                     f"Using delegatedAction to update TP on behalf of {trader_address}")
 
-                # The correct way to encode the function call in Web3.py
-                # Create the function object for updateTp
-                update_tp_func = self.ostium_trading_contract.functions.updateTp(
-                    int(pair_id), int(trade_index), tp_value
-                )
-
-                # Get the encoded data for the updateTp function call
-                inner_encoded_data = update_tp_func.build_transaction({'gas': 0})[
-                    'data']
+                # Encode the updateTp call locally (no RPC round-trips)
+                inner_encoded_data = self._encode_trading_call(
+                    fn_name='updateTp', args=[int(pair_id), int(trade_index), tp_value])
 
                 # Create the outer delegatedAction transaction
                 update_tp_tx = self.ostium_trading_contract.functions.delegatedAction(
                     trader_address, inner_encoded_data
-                ).build_transaction({'from': account.address})
+                ).build_transaction(self._build_tx_params(account))
             else:
                 # Standard direct function call (no delegation)
                 update_tp_tx = self.ostium_trading_contract.functions.updateTp(
                     int(pair_id), int(trade_index), tp_value
-                ).build_transaction({'from': account.address})
-
-            update_tp_tx['nonce'] = self.get_nonce(account.address)
+                ).build_transaction(self._build_tx_params(account))
 
             signed_tx = self.web3.eth.account.sign_transaction(
                 update_tp_tx, private_key=self.private_key)
@@ -630,27 +648,19 @@ class Ostium:
                 self.log(
                     f"Using delegatedAction to update SL on behalf of {trader_address}")
 
-                # The correct way to encode the function call in Web3.py
-                # Create the function object for updateSl
-                update_sl_func = self.ostium_trading_contract.functions.updateSl(
-                    int(pairID), int(index), sl_value
-                )
-
-                # Get the encoded data for the updateSl function call
-                inner_encoded_data = update_sl_func.build_transaction({'gas': 0})[
-                    'data']
+                # Encode the updateSl call locally (no RPC round-trips)
+                inner_encoded_data = self._encode_trading_call(
+                    fn_name='updateSl', args=[int(pairID), int(index), sl_value])
 
                 # Create the outer delegatedAction transaction
                 update_sl_tx = self.ostium_trading_contract.functions.delegatedAction(
                     trader_address, inner_encoded_data
-                ).build_transaction({'from': account.address})
+                ).build_transaction(self._build_tx_params(account))
             else:
                 # Standard direct function call (no delegation)
                 update_sl_tx = self.ostium_trading_contract.functions.updateSl(
                     int(pairID), int(index), sl_value
-                ).build_transaction({'from': account.address})
-
-            update_sl_tx['nonce'] = self.get_nonce(account.address)
+                ).build_transaction(self._build_tx_params(account))
 
             signed_tx = self.web3.eth.account.sign_transaction(
                 update_sl_tx, private_key=self.private_key)
@@ -670,19 +680,39 @@ class Ostium:
             raise Exception(
                 f'{reason_string}\n\n{suggestion}' if suggestion != None else reason_string)
 
-    def __approve(self, account, collateral, use_delegation, trader_address=None):
-        trader_address = trader_address if trader_address and use_delegation else account.address
+    def _allowance_owner(self, account, trader_address=None):
+        return trader_address if trader_address and self.use_delegation else account.address
+
+    def _check_allowance(self, owner, amount):
+        """
+        Return the USDC allowance for owner, reading from chain only when the
+        cached value can't cover the requested amount.
+        """
+        cached = self._allowance_cache.get(owner)
+        if cached is not None and cached >= amount:
+            return cached
         allowance = self.usdc_contract.functions.allowance(
-            trader_address, self.ostium_trading_storage_address).call()
+            owner, self.ostium_trading_storage_address).call()
+        self._allowance_cache[owner] = allowance
+        return allowance
+
+    def __approve(self, account, collateral, use_delegation, trader_address=None, nonce=None):
+        """
+        Ensure the allowance covers the collateral, sending an approve tx if
+        needed. Returns the nonce the caller should use for its own
+        transaction (the prefetched nonce advances by one when an approve tx
+        was sent), or None if no nonce was prefetched.
+        """
+        owner = trader_address if trader_address and use_delegation else account.address
+        allowance = self._check_allowance(owner, collateral)
 
         if allowance < collateral:
             if not use_delegation:
+                approve_amount = self.web3.to_wei(1000000, 'mwei')
                 approve_tx = self.usdc_contract.functions.approve(
                     self.ostium_trading_storage_address,
-                    self.web3.to_wei(1000000, 'mwei')
-                ).build_transaction({'from': account.address})
-
-                approve_tx['nonce'] = self.get_nonce(account.address)
+                    approve_amount
+                ).build_transaction(self._build_tx_params(account, nonce=nonce))
 
                 signed_tx = self.web3.eth.account.sign_transaction(
                     approve_tx, private_key=self.private_key)
@@ -693,9 +723,16 @@ class Ostium:
                 approve_receipt = self.web3.eth.wait_for_transaction_receipt(
                     approve_tx_hash)
                 self.log(f"Approval Receipt: {approve_receipt}")
+                self._allowance_cache[owner] = approve_amount
+                if nonce is not None:
+                    nonce += 1
             else:
                 raise Exception(
                     f"Sufficient allowance for {trader_address} not present. Please approve the trading contract to spend USDC.")
+
+        # The pending transaction will consume this much of the allowance
+        self._allowance_cache[owner] -= collateral
+        return nonce
 
     def withdraw(self, amount, receiving_address):
         account = self._get_account()
@@ -709,9 +746,7 @@ class Ostium:
             transfer_tx = self.usdc_contract.functions.transfer(
                 receiving_address,
                 amount_in_base_units
-            ).build_transaction({'from': account.address})
-
-            transfer_tx['nonce'] = self.get_nonce(account.address)
+            ).build_transaction(self._build_tx_params(account))
 
             signed_tx = self.web3.eth.account.sign_transaction(
                 transfer_tx, private_key=self.private_key)
@@ -757,9 +792,7 @@ class Ostium:
                 price_value,
                 tp_value,
                 sl_value
-            ).build_transaction({'from': account.address})
-
-            trade_tx['nonce'] = self.get_nonce(account.address)
+            ).build_transaction(self._build_tx_params(account))
 
             signed_tx = self.web3.eth.account.sign_transaction(
                 trade_tx, private_key=account.key)

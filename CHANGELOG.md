@@ -5,6 +5,27 @@ All notable changes to the Ostium Python SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.0] - 2026-07-09
+
+### Performance
+- **Transactions are now built offline.** `chainId` (validated once at SDK init), a static gas ceiling and static fee caps are supplied to every `build_transaction` call, eliminating ~7 sequential JSON-RPC round-trips per trade (`eth_chainId` ×3, `eth_estimateGas`, fee-history lookups, duplicate nonce fetch). Measured pre-send latency for `perform_trade()`: 5.7s → 0.7s on a public Arbitrum RPC; 1.2s → ~0.6s on a dedicated RPC. Calldata is byte-identical to previous versions.
+- **Nonce and USDC allowance are fetched concurrently** in `perform_trade()`, and the allowance is cached per trader after the first check (re-fetched only when the cached value can no longer cover a trade).
+- **Delegation calldata is encoded locally** via `encodeABI` instead of `build_transaction({'gas': 0})`, removing all RPC calls from inner-call encoding on every delegated operation.
+- **Subgraph client no longer downloads the GraphQL schema** on first use (`fetch_schema_from_transport=False`), saving ~2.5s on the first subgraph query of every session.
+
+### Changed
+- **All bundled ABIs refreshed from the verified on-chain implementation contracts** (trading, tradingStorage, USDC, pairInfos, pairsStorage, vault — addresses resolved via the Ostium registry `0x799a139aE56e11F0476aCE2f6118CfcAed9608d2`). Calldata for every SDK write function verified byte-identical before/after. The testnet faucet ABI is unchanged (contract not verified on Blockscout).
+
+### Added
+- `Ostium` accepts an optional `chain_id` constructor parameter (passed automatically by `OstiumSDK`; lazily fetched from the RPC when constructed standalone).
+- Configurable transaction gas parameters on `Ostium`: `gas_limit` (default 2,500,000 — an upper bound, Arbitrum refunds unused gas), `max_fee_per_gas` (default 0.5 gwei — a cap, the actual charge is the network base fee) and `max_priority_fee_per_gas` (default 0).
+
+### Fixed
+- **`order_id` extraction from trade receipts.** The oracle contract replaced `PriceRequested(uint256,bytes32,uint256)` with `PriceRequestedV2(uint256,uint8,bytes32,uint256)`, so `perform_trade()`/`close_trade()` returned `order_id=None` and `track_order_and_trade()` raised `ValueError`. Order IDs are now extracted from `PriceRequestedV2`, with the trading contract's `MarketOpenOrderInitiated` / `MarketCloseOrderInitiatedV2` events as fallback. Verified with live mainnet trades.
+
+### Notes
+- Gas is no longer estimated per transaction via `eth_estimateGas`. A transaction that would revert now fails on-chain rather than at estimation time; the SDK's existing error decoding still surfaces the revert reason from the receipt/require string.
+
 ## [3.2.0] - 2026-04-28
 
 > **Release timing:** Upgrade to `3.2.0` on **Apr 28 after 9:00 AM EST**, when the contract upgrade is live.  

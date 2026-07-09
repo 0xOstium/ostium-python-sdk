@@ -20,9 +20,11 @@ class SubgraphClient:
         """Get or create a GQL client with proper connection handling"""
         if self._client is None:
             transport = AIOHTTPTransport(url=self.url)
+            # The SDK only sends static, hand-written queries; skipping the
+            # schema download saves ~2.5s on the first query of every session
             self._client = Client(
                 transport=transport,
-                fetch_schema_from_transport=True,
+                fetch_schema_from_transport=False,
                 execute_timeout=None
             )
         return self._client

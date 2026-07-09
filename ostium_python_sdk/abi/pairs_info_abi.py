@@ -32,6 +32,17 @@ pairs_info_abi = [
         "type": "error"
     },
     {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "a",
+                "type": "address"
+            }
+        ],
+        "name": "NotGovOrManager",
+        "type": "error"
+    },
+    {
         "inputs": [],
         "name": "NotInitializing",
         "type": "error"
@@ -197,6 +208,56 @@ pairs_info_abi = [
             }
         ],
         "name": "AccRolloverFeesStored",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": True,
+                "internalType": "uint16",
+                "name": "pairIndex",
+                "type": "uint16"
+            },
+            {
+                "indexed": False,
+                "internalType": "int256",
+                "name": "accPerOiLong",
+                "type": "int256"
+            },
+            {
+                "indexed": False,
+                "internalType": "int256",
+                "name": "accPerOiShort",
+                "type": "int256"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint32",
+                "name": "lastUpdateBlock",
+                "type": "uint32"
+            }
+        ],
+        "name": "AccRolloverFeesStoredV2",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": True,
+                "internalType": "uint16",
+                "name": "pairId",
+                "type": "uint16"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "premium",
+                "type": "uint256"
+            }
+        ],
+        "name": "BrokerPremiumUpdated",
         "type": "event"
     },
     {
@@ -469,6 +530,86 @@ pairs_info_abi = [
         "anonymous": False,
         "inputs": [
             {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "pairIdsLength",
+                "type": "uint256"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "blockTimestamp",
+                "type": "uint256"
+            }
+        ],
+        "name": "MigrationV4Completed",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": True,
+                "internalType": "uint16",
+                "name": "pairIndex",
+                "type": "uint16"
+            },
+            {
+                "components": [
+                    {
+                        "internalType": "uint256",
+                        "name": "netVolThreshold",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint128",
+                        "name": "decayRate",
+                        "type": "uint128"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "priceImpactK",
+                        "type": "uint256"
+                    }
+                ],
+                "indexed": False,
+                "internalType": "struct IOstiumPairInfos.DynamicSpreadParams",
+                "name": "params",
+                "type": "tuple"
+            }
+        ],
+        "name": "PairDynamicSpreadParamsUpdated",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": True,
+                "internalType": "uint16",
+                "name": "pairIndex",
+                "type": "uint16"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "newBuyVolume",
+                "type": "uint256"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "newSellVolume",
+                "type": "uint256"
+            }
+        ],
+        "name": "PairDynamicSpreadStateUpdated",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
                 "indexed": True,
                 "internalType": "uint16",
                 "name": "pairIndex",
@@ -617,6 +758,25 @@ pairs_info_abi = [
                 "type": "uint16"
             },
             {
+                "indexed": False,
+                "internalType": "bool",
+                "name": "value",
+                "type": "bool"
+            }
+        ],
+        "name": "PairIsNegativeRolloverAllowedUpdated",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": True,
+                "internalType": "uint16",
+                "name": "pairIndex",
+                "type": "uint16"
+            },
+            {
                 "components": [
                     {
                         "internalType": "uint32",
@@ -719,6 +879,99 @@ pairs_info_abi = [
                 "type": "uint16"
             },
             {
+                "components": [
+                    {
+                        "internalType": "int256",
+                        "name": "accPerOiLong",
+                        "type": "int256"
+                    },
+                    {
+                        "internalType": "int256",
+                        "name": "accPerOiShort",
+                        "type": "int256"
+                    },
+                    {
+                        "internalType": "int256",
+                        "name": "lastLongPure",
+                        "type": "int256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "brokerPremium",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint64",
+                        "name": "maxRolloverFeePerBlock",
+                        "type": "uint64"
+                    },
+                    {
+                        "internalType": "uint32",
+                        "name": "lastUpdateBlock",
+                        "type": "uint32"
+                    },
+                    {
+                        "internalType": "bool",
+                        "name": "isNegativeRolloverAllowed",
+                        "type": "bool"
+                    }
+                ],
+                "indexed": False,
+                "internalType": "struct IOstiumPairInfos.PairRolloverFeesV2",
+                "name": "value",
+                "type": "tuple"
+            }
+        ],
+        "name": "PairRolloverFeesUpdatedV2",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": True,
+                "internalType": "address",
+                "name": "trader",
+                "type": "address"
+            },
+            {
+                "indexed": True,
+                "internalType": "uint16",
+                "name": "pairId",
+                "type": "uint16"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint8",
+                "name": "index",
+                "type": "uint8"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "fee",
+                "type": "uint256"
+            },
+            {
+                "indexed": False,
+                "internalType": "bool",
+                "name": "isLong",
+                "type": "bool"
+            }
+        ],
+        "name": "RolloverFeePaid",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": True,
+                "internalType": "uint16",
+                "name": "pairIndex",
+                "type": "uint16"
+            },
+            {
                 "indexed": False,
                 "internalType": "uint256",
                 "name": "value",
@@ -732,6 +985,56 @@ pairs_info_abi = [
             }
         ],
         "name": "RolloverFeePerBlockUpdated",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": True,
+                "internalType": "uint16",
+                "name": "pairId",
+                "type": "uint16"
+            },
+            {
+                "indexed": False,
+                "internalType": "int256",
+                "name": "delta",
+                "type": "int256"
+            },
+            {
+                "indexed": False,
+                "internalType": "int256",
+                "name": "accPerOiLong",
+                "type": "int256"
+            },
+            {
+                "indexed": False,
+                "internalType": "int256",
+                "name": "accPerOiShort",
+                "type": "int256"
+            }
+        ],
+        "name": "RolloverFeesInjected",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": True,
+                "internalType": "uint16",
+                "name": "pairId",
+                "type": "uint16"
+            },
+            {
+                "indexed": False,
+                "internalType": "int256",
+                "name": "pureFee",
+                "type": "int256"
+            }
+        ],
+        "name": "RolloverFeesUpdateSuccess",
         "type": "event"
     },
     {
@@ -775,6 +1078,55 @@ pairs_info_abi = [
             }
         ],
         "name": "TradeInitialAccFeesStored",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": True,
+                "internalType": "uint256",
+                "name": "tradeId",
+                "type": "uint256"
+            },
+            {
+                "indexed": True,
+                "internalType": "address",
+                "name": "trader",
+                "type": "address"
+            },
+            {
+                "indexed": True,
+                "internalType": "uint16",
+                "name": "pairIndex",
+                "type": "uint16"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint8",
+                "name": "index",
+                "type": "uint8"
+            },
+            {
+                "indexed": False,
+                "internalType": "int256",
+                "name": "rollover",
+                "type": "int256"
+            },
+            {
+                "indexed": False,
+                "internalType": "bool",
+                "name": "isRolloverSignNegative",
+                "type": "bool"
+            },
+            {
+                "indexed": False,
+                "internalType": "int256",
+                "name": "funding",
+                "type": "int256"
+            }
+        ],
+        "name": "TradeInitialAccFeesStoredV2",
         "type": "event"
     },
     {
@@ -859,33 +1211,19 @@ pairs_info_abi = [
                 "internalType": "uint16",
                 "name": "pairIndex",
                 "type": "uint16"
+            },
+            {
+                "internalType": "bool",
+                "name": "long",
+                "type": "bool"
             }
         ],
-        "name": "getAccRolloverFees",
+        "name": "getAccRollover",
         "outputs": [
             {
-                "internalType": "uint256",
+                "internalType": "int256",
                 "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint16",
-                "name": "pairIndex",
-                "type": "uint16"
-            }
-        ],
-        "name": "getAccRolloverFeesUpdateBlock",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
+                "type": "int256"
             }
         ],
         "stateMutability": "view",
@@ -986,6 +1324,69 @@ pairs_info_abi = [
                 "type": "uint16"
             }
         ],
+        "name": "getPairPriceImpactK",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint16",
+                "name": "pairId",
+                "type": "uint16"
+            }
+        ],
+        "name": "getPairRolloverFees",
+        "outputs": [
+            {
+                "internalType": "int256",
+                "name": "",
+                "type": "int256"
+            },
+            {
+                "internalType": "int256",
+                "name": "",
+                "type": "int256"
+            },
+            {
+                "internalType": "int256",
+                "name": "",
+                "type": "int256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint32",
+                "name": "",
+                "type": "uint32"
+            },
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint16",
+                "name": "pairIndex",
+                "type": "uint16"
+            }
+        ],
         "name": "getPendingAccFundingFees",
         "outputs": [
             {
@@ -1018,33 +1419,19 @@ pairs_info_abi = [
                 "internalType": "uint16",
                 "name": "pairIndex",
                 "type": "uint16"
+            },
+            {
+                "internalType": "bool",
+                "name": "long",
+                "type": "bool"
             }
         ],
         "name": "getPendingAccRolloverFees",
         "outputs": [
             {
-                "internalType": "uint256",
+                "internalType": "int256",
                 "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint16",
-                "name": "pairIndex",
-                "type": "uint16"
-            }
-        ],
-        "name": "getRolloverFeePerBlock",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
+                "type": "int256"
             }
         ],
         "stateMutability": "view",
@@ -1183,9 +1570,9 @@ pairs_info_abi = [
         "name": "getTradeInitialAccRolloverFeesPerCollateral",
         "outputs": [
             {
-                "internalType": "uint256",
+                "internalType": "int256",
                 "name": "",
-                "type": "uint256"
+                "type": "int256"
             }
         ],
         "stateMutability": "view",
@@ -1297,9 +1684,9 @@ pairs_info_abi = [
                 "type": "uint32"
             },
             {
-                "internalType": "uint256",
+                "internalType": "int256",
                 "name": "rolloverFee",
-                "type": "uint256"
+                "type": "int256"
             },
             {
                 "internalType": "int256",
@@ -1341,6 +1728,11 @@ pairs_info_abi = [
                 "type": "uint8"
             },
             {
+                "internalType": "bool",
+                "name": "long",
+                "type": "bool"
+            },
+            {
                 "internalType": "uint256",
                 "name": "collateral",
                 "type": "uint256"
@@ -1354,9 +1746,9 @@ pairs_info_abi = [
         "name": "getTradeRolloverFee",
         "outputs": [
             {
-                "internalType": "uint256",
+                "internalType": "int256",
                 "name": "",
-                "type": "uint256"
+                "type": "int256"
             }
         ],
         "stateMutability": "view",
@@ -1365,14 +1757,14 @@ pairs_info_abi = [
     {
         "inputs": [
             {
-                "internalType": "uint256",
+                "internalType": "int256",
                 "name": "accRolloverFeesPerCollateral",
-                "type": "uint256"
+                "type": "int256"
             },
             {
-                "internalType": "uint256",
+                "internalType": "int256",
                 "name": "endAccRolloverFeesPerCollateral",
-                "type": "uint256"
+                "type": "int256"
             },
             {
                 "internalType": "uint256",
@@ -1388,9 +1780,9 @@ pairs_info_abi = [
         "name": "getTradeRolloverFeePure",
         "outputs": [
             {
-                "internalType": "uint256",
+                "internalType": "int256",
                 "name": "",
-                "type": "uint256"
+                "type": "int256"
             }
         ],
         "stateMutability": "pure",
@@ -1452,9 +1844,9 @@ pairs_info_abi = [
                 "type": "uint256"
             },
             {
-                "internalType": "uint256",
+                "internalType": "int256",
                 "name": "r",
-                "type": "uint256"
+                "type": "int256"
             },
             {
                 "internalType": "int256",
@@ -1478,19 +1870,14 @@ pairs_info_abi = [
                 "type": "int256"
             },
             {
-                "internalType": "uint256",
+                "internalType": "int256",
                 "name": "rolloverFee",
-                "type": "uint256"
+                "type": "int256"
             },
             {
                 "internalType": "int256",
                 "name": "fundingFee",
                 "type": "int256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "liqMarginValue",
-                "type": "uint256"
             }
         ],
         "name": "getTradeValuePure",
@@ -1626,6 +2013,65 @@ pairs_info_abi = [
         "type": "function"
     },
     {
+        "inputs": [
+            {
+                "internalType": "uint16[]",
+                "name": "pairIds",
+                "type": "uint16[]"
+            },
+            {
+                "internalType": "int256[]",
+                "name": "lastLongPures",
+                "type": "int256[]"
+            },
+            {
+                "internalType": "uint256[]",
+                "name": "brokerPremiums",
+                "type": "uint256[]"
+            }
+        ],
+        "name": "initializeV4",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint16",
+                "name": "pairId",
+                "type": "uint16"
+            },
+            {
+                "internalType": "int256",
+                "name": "delta",
+                "type": "int256"
+            }
+        ],
+        "name": "injectRolloverFees",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint16[]",
+                "name": "pairIds",
+                "type": "uint16[]"
+            },
+            {
+                "internalType": "int256[]",
+                "name": "deltas",
+                "type": "int256[]"
+            }
+        ],
+        "name": "injectRolloverFeesArray",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
         "inputs": [],
         "name": "liqMarginThresholdP",
         "outputs": [
@@ -1659,6 +2105,64 @@ pairs_info_abi = [
                 "internalType": "uint8",
                 "name": "",
                 "type": "uint8"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint16",
+                "name": "pairIndex",
+                "type": "uint16"
+            }
+        ],
+        "name": "pairDynamicSpreadParams",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "netVolThreshold",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint128",
+                "name": "decayRate",
+                "type": "uint128"
+            },
+            {
+                "internalType": "uint256",
+                "name": "priceImpactK",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint16",
+                "name": "pairIndex",
+                "type": "uint16"
+            }
+        ],
+        "name": "pairDynamicSpreadState",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "buyVolume",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "sellVolume",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint32",
+                "name": "lastUpdateTimestamp",
+                "type": "uint32"
             }
         ],
         "stateMutability": "view",
@@ -1790,7 +2294,7 @@ pairs_info_abi = [
                 "type": "uint16"
             }
         ],
-        "name": "pairRolloverFees",
+        "name": "pairRolloverFeesV1",
         "outputs": [
             {
                 "internalType": "uint256",
@@ -1821,6 +2325,55 @@ pairs_info_abi = [
                 "internalType": "uint16",
                 "name": "rolloverFeeSlope",
                 "type": "uint16"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint16",
+                "name": "pairIndex",
+                "type": "uint16"
+            }
+        ],
+        "name": "pairRolloverFeesV2",
+        "outputs": [
+            {
+                "internalType": "int256",
+                "name": "accPerOiLong",
+                "type": "int256"
+            },
+            {
+                "internalType": "int256",
+                "name": "accPerOiShort",
+                "type": "int256"
+            },
+            {
+                "internalType": "int256",
+                "name": "lastLongPure",
+                "type": "int256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "brokerPremium",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint64",
+                "name": "maxRolloverFeePerBlock",
+                "type": "uint64"
+            },
+            {
+                "internalType": "uint32",
+                "name": "lastUpdateBlock",
+                "type": "uint32"
+            },
+            {
+                "internalType": "bool",
+                "name": "isNegativeRolloverAllowed",
+                "type": "bool"
             }
         ],
         "stateMutability": "view",
@@ -2019,7 +2572,42 @@ pairs_info_abi = [
                 "type": "uint256"
             }
         ],
-        "name": "setMaxRolloverVolatility",
+        "name": "setMaxRolloverFeePerBlockV1",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint16",
+                "name": "pairIndex",
+                "type": "uint16"
+            },
+            {
+                "components": [
+                    {
+                        "internalType": "uint256",
+                        "name": "netVolThreshold",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint128",
+                        "name": "decayRate",
+                        "type": "uint128"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "priceImpactK",
+                        "type": "uint256"
+                    }
+                ],
+                "internalType": "struct IOstiumPairInfos.DynamicSpreadParams",
+                "name": "params",
+                "type": "tuple"
+            }
+        ],
+        "name": "setPairDynamicSpreadParams",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -2032,12 +2620,29 @@ pairs_info_abi = [
                 "type": "uint16[]"
             },
             {
-                "internalType": "uint256[]",
+                "components": [
+                    {
+                        "internalType": "uint256",
+                        "name": "netVolThreshold",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint128",
+                        "name": "decayRate",
+                        "type": "uint128"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "priceImpactK",
+                        "type": "uint256"
+                    }
+                ],
+                "internalType": "struct IOstiumPairInfos.DynamicSpreadParams[]",
                 "name": "values",
-                "type": "uint256[]"
+                "type": "tuple[]"
             }
         ],
-        "name": "setMaxRolloverVolatilityArray",
+        "name": "setPairDynamicSpreadParamsArray",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -2210,6 +2815,42 @@ pairs_info_abi = [
                 "type": "uint16"
             },
             {
+                "internalType": "bool",
+                "name": "value",
+                "type": "bool"
+            }
+        ],
+        "name": "setPairIsNegativeRolloverAllowed",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint16[]",
+                "name": "indices",
+                "type": "uint16[]"
+            },
+            {
+                "internalType": "bool[]",
+                "name": "values",
+                "type": "bool[]"
+            }
+        ],
+        "name": "setPairIsNegativeRolloverAllowedArray",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint16",
+                "name": "pairIndex",
+                "type": "uint16"
+            },
+            {
                 "components": [
                     {
                         "internalType": "uint32",
@@ -2348,14 +2989,24 @@ pairs_info_abi = [
             {
                 "components": [
                     {
-                        "internalType": "uint256",
-                        "name": "accPerOi",
-                        "type": "uint256"
+                        "internalType": "int256",
+                        "name": "accPerOiLong",
+                        "type": "int256"
                     },
                     {
-                        "internalType": "uint64",
-                        "name": "rolloverFeePerBlock",
-                        "type": "uint64"
+                        "internalType": "int256",
+                        "name": "accPerOiShort",
+                        "type": "int256"
+                    },
+                    {
+                        "internalType": "int256",
+                        "name": "lastLongPure",
+                        "type": "int256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "brokerPremium",
+                        "type": "uint256"
                     },
                     {
                         "internalType": "uint64",
@@ -2364,21 +3015,16 @@ pairs_info_abi = [
                     },
                     {
                         "internalType": "uint32",
-                        "name": "maxRolloverVolatility",
-                        "type": "uint32"
-                    },
-                    {
-                        "internalType": "uint32",
                         "name": "lastUpdateBlock",
                         "type": "uint32"
                     },
                     {
-                        "internalType": "uint16",
-                        "name": "rolloverFeeSlope",
-                        "type": "uint16"
+                        "internalType": "bool",
+                        "name": "isNegativeRolloverAllowed",
+                        "type": "bool"
                     }
                 ],
-                "internalType": "struct IOstiumPairInfos.PairRolloverFees",
+                "internalType": "struct IOstiumPairInfos.PairRolloverFeesV2",
                 "name": "value",
                 "type": "tuple"
             }
@@ -2398,14 +3044,24 @@ pairs_info_abi = [
             {
                 "components": [
                     {
-                        "internalType": "uint256",
-                        "name": "accPerOi",
-                        "type": "uint256"
+                        "internalType": "int256",
+                        "name": "accPerOiLong",
+                        "type": "int256"
                     },
                     {
-                        "internalType": "uint64",
-                        "name": "rolloverFeePerBlock",
-                        "type": "uint64"
+                        "internalType": "int256",
+                        "name": "accPerOiShort",
+                        "type": "int256"
+                    },
+                    {
+                        "internalType": "int256",
+                        "name": "lastLongPure",
+                        "type": "int256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "brokerPremium",
+                        "type": "uint256"
                     },
                     {
                         "internalType": "uint64",
@@ -2414,98 +3070,21 @@ pairs_info_abi = [
                     },
                     {
                         "internalType": "uint32",
-                        "name": "maxRolloverVolatility",
-                        "type": "uint32"
-                    },
-                    {
-                        "internalType": "uint32",
                         "name": "lastUpdateBlock",
                         "type": "uint32"
                     },
                     {
-                        "internalType": "uint16",
-                        "name": "rolloverFeeSlope",
-                        "type": "uint16"
+                        "internalType": "bool",
+                        "name": "isNegativeRolloverAllowed",
+                        "type": "bool"
                     }
                 ],
-                "internalType": "struct IOstiumPairInfos.PairRolloverFees[]",
+                "internalType": "struct IOstiumPairInfos.PairRolloverFeesV2[]",
                 "name": "values",
                 "type": "tuple[]"
             }
         ],
         "name": "setPairRolloverFeesArray",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint16",
-                "name": "pairIndex",
-                "type": "uint16"
-            },
-            {
-                "internalType": "uint256",
-                "name": "volatility",
-                "type": "uint256"
-            }
-        ],
-        "name": "setRolloverFeePerBlock",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint16[]",
-                "name": "indices",
-                "type": "uint16[]"
-            },
-            {
-                "internalType": "uint256[]",
-                "name": "values",
-                "type": "uint256[]"
-            }
-        ],
-        "name": "setRolloverFeePerBlockArray",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint16",
-                "name": "pairIndex",
-                "type": "uint16"
-            },
-            {
-                "internalType": "uint256",
-                "name": "value",
-                "type": "uint256"
-            }
-        ],
-        "name": "setRolloverFeeSlope",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint16[]",
-                "name": "indices",
-                "type": "uint16[]"
-            },
-            {
-                "internalType": "uint256[]",
-                "name": "values",
-                "type": "uint256[]"
-            }
-        ],
-        "name": "setRolloverFeeSlopeArray",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -2577,9 +3156,109 @@ pairs_info_abi = [
                 "internalType": "bool",
                 "name": "openedAfterUpdate",
                 "type": "bool"
+            },
+            {
+                "internalType": "bool",
+                "name": "isRolloverSignNegative",
+                "type": "bool"
             }
         ],
         "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint16",
+                "name": "pairIndex",
+                "type": "uint16"
+            },
+            {
+                "internalType": "uint256",
+                "name": "newBuyVolume",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "newSellVolume",
+                "type": "uint256"
+            }
+        ],
+        "name": "updateDynamicSpreadState",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint16",
+                "name": "pairId",
+                "type": "uint16"
+            },
+            {
+                "internalType": "uint256",
+                "name": "premium",
+                "type": "uint256"
+            }
+        ],
+        "name": "updatePairBrokerPremium",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint16[]",
+                "name": "pairIds",
+                "type": "uint16[]"
+            },
+            {
+                "internalType": "uint256[]",
+                "name": "premiums",
+                "type": "uint256[]"
+            }
+        ],
+        "name": "updatePairBrokerPremiumArray",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint16",
+                "name": "pairId",
+                "type": "uint16"
+            },
+            {
+                "internalType": "int256",
+                "name": "pureLongFee",
+                "type": "int256"
+            }
+        ],
+        "name": "updateRolloverFees",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint16[]",
+                "name": "pairIds",
+                "type": "uint16[]"
+            },
+            {
+                "internalType": "int256[]",
+                "name": "pureLongFees",
+                "type": "int256[]"
+            }
+        ],
+        "name": "updateRolloverFeesArray",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function"
     }
 ]

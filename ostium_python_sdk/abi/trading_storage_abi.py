@@ -5,33 +5,6 @@ trading_storage_abi = [
         "type": "constructor"
     },
     {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "target",
-                "type": "address"
-            }
-        ],
-        "name": "AddressEmptyCode",
-        "type": "error"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "account",
-                "type": "address"
-            }
-        ],
-        "name": "AddressInsufficientBalance",
-        "type": "error"
-    },
-    {
-        "inputs": [],
-        "name": "FailedInnerCall",
-        "type": "error"
-    },
-    {
         "inputs": [],
         "name": "InvalidInitialization",
         "type": "error"
@@ -98,6 +71,17 @@ trading_storage_abi = [
             }
         ],
         "name": "NotManager",
+        "type": "error"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "a",
+                "type": "address"
+            }
+        ],
+        "name": "NotManagerOrMaxOIKeeper",
         "type": "error"
     },
     {
@@ -192,6 +176,19 @@ trading_storage_abi = [
         "anonymous": False,
         "inputs": [
             {
+                "indexed": False,
+                "internalType": "address",
+                "name": "keeper",
+                "type": "address"
+            }
+        ],
+        "name": "MaxOIKeeperUpdated",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
                 "indexed": True,
                 "internalType": "uint16",
                 "name": "pairIndex",
@@ -236,12 +233,69 @@ trading_storage_abi = [
     {
         "inputs": [
             {
+                "internalType": "address",
+                "name": "trader",
+                "type": "address"
+            },
+            {
+                "internalType": "uint16",
+                "name": "pairIndex",
+                "type": "uint16"
+            },
+            {
+                "internalType": "uint256",
+                "name": "tradeIndex",
+                "type": "uint256"
+            }
+        ],
+        "name": "builderData",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "builder",
+                "type": "address"
+            },
+            {
+                "internalType": "uint32",
+                "name": "builderFee",
+                "type": "uint32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
                 "internalType": "uint256",
                 "name": "_amount",
                 "type": "uint256"
             }
         ],
         "name": "claimFees",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_trader",
+                "type": "address"
+            },
+            {
+                "internalType": "uint16",
+                "name": "_pairIndex",
+                "type": "uint16"
+            },
+            {
+                "internalType": "uint8",
+                "name": "_index",
+                "type": "uint8"
+            }
+        ],
+        "name": "clearDeprecatedBeingMarketClosed",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -302,6 +356,47 @@ trading_storage_abi = [
                 "internalType": "uint8",
                 "name": "",
                 "type": "uint8"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_trader",
+                "type": "address"
+            },
+            {
+                "internalType": "uint16",
+                "name": "_pairIndex",
+                "type": "uint16"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_index",
+                "type": "uint256"
+            }
+        ],
+        "name": "getBuilderData",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "builder",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint32",
+                        "name": "builderFee",
+                        "type": "uint32"
+                    }
+                ],
+                "internalType": "struct IOstiumTradingStorage.BuilderFee",
+                "name": "",
+                "type": "tuple"
             }
         ],
         "stateMutability": "view",
@@ -387,6 +482,11 @@ trading_storage_abi = [
                     {
                         "internalType": "bool",
                         "name": "buy",
+                        "type": "bool"
+                    },
+                    {
+                        "internalType": "bool",
+                        "name": "isDayTrade",
                         "type": "bool"
                     }
                 ],
@@ -474,6 +574,11 @@ trading_storage_abi = [
                         "internalType": "bool",
                         "name": "buy",
                         "type": "bool"
+                    },
+                    {
+                        "internalType": "bool",
+                        "name": "isDayTrade",
+                        "type": "bool"
                     }
                 ],
                 "internalType": "struct IOstiumTradingStorage.OpenLimitOrder",
@@ -555,6 +660,11 @@ trading_storage_abi = [
                         "internalType": "bool",
                         "name": "buy",
                         "type": "bool"
+                    },
+                    {
+                        "internalType": "bool",
+                        "name": "isDayTrade",
+                        "type": "bool"
                     }
                 ],
                 "internalType": "struct IOstiumTradingStorage.OpenLimitOrder[]",
@@ -631,6 +741,11 @@ trading_storage_abi = [
                         "internalType": "bool",
                         "name": "buy",
                         "type": "bool"
+                    },
+                    {
+                        "internalType": "bool",
+                        "name": "isDayTrade",
+                        "type": "bool"
                     }
                 ],
                 "internalType": "struct IOstiumTradingStorage.Trade",
@@ -695,7 +810,7 @@ trading_storage_abi = [
                     },
                     {
                         "internalType": "bool",
-                        "name": "beingMarketClosed",
+                        "name": "deprecatedBeingMarketClosed",
                         "type": "bool"
                     }
                 ],
@@ -786,6 +901,11 @@ trading_storage_abi = [
                         "internalType": "uint8",
                         "name": "index",
                         "type": "uint8"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "tradeId",
+                        "type": "uint256"
                     }
                 ],
                 "internalType": "struct IOstiumTradingStorage.PendingRemoveCollateral",
@@ -898,6 +1018,61 @@ trading_storage_abi = [
         "name": "initialize",
         "outputs": [],
         "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "limitOrderIdCounter",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "trader",
+                "type": "address"
+            },
+            {
+                "internalType": "uint16",
+                "name": "pairIndex",
+                "type": "uint16"
+            },
+            {
+                "internalType": "uint8",
+                "name": "index",
+                "type": "uint8"
+            }
+        ],
+        "name": "limitOrderIds",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "maxOIKeeper",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
         "type": "function"
     },
     {
@@ -1067,6 +1242,11 @@ trading_storage_abi = [
                 "internalType": "bool",
                 "name": "buy",
                 "type": "bool"
+            },
+            {
+                "internalType": "bool",
+                "name": "isDayTrade",
+                "type": "bool"
             }
         ],
         "stateMutability": "view",
@@ -1148,7 +1328,7 @@ trading_storage_abi = [
             },
             {
                 "internalType": "bool",
-                "name": "beingMarketClosed",
+                "name": "deprecatedBeingMarketClosed",
                 "type": "bool"
             }
         ],
@@ -1263,6 +1443,11 @@ trading_storage_abi = [
                 "internalType": "bool",
                 "name": "buy",
                 "type": "bool"
+            },
+            {
+                "internalType": "bool",
+                "name": "isDayTrade",
+                "type": "bool"
             }
         ],
         "stateMutability": "view",
@@ -1373,6 +1558,25 @@ trading_storage_abi = [
                 "internalType": "uint8",
                 "name": "",
                 "type": "uint8"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "orderId",
+                "type": "uint256"
+            }
+        ],
+        "name": "pendingMarketCloseTradeIds",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "tradeId",
+                "type": "uint256"
             }
         ],
         "stateMutability": "view",
@@ -1500,6 +1704,11 @@ trading_storage_abi = [
                 "internalType": "enum IOstiumTradingStorage.LimitOrder",
                 "name": "orderType",
                 "type": "uint8"
+            },
+            {
+                "internalType": "uint256",
+                "name": "tradeId",
+                "type": "uint256"
             }
         ],
         "stateMutability": "view",
@@ -1576,6 +1785,11 @@ trading_storage_abi = [
                         "internalType": "bool",
                         "name": "buy",
                         "type": "bool"
+                    },
+                    {
+                        "internalType": "bool",
+                        "name": "isDayTrade",
+                        "type": "bool"
                     }
                 ],
                 "internalType": "struct IOstiumTradingStorage.Trade",
@@ -1620,9 +1834,27 @@ trading_storage_abi = [
                 "internalType": "uint8",
                 "name": "index",
                 "type": "uint8"
+            },
+            {
+                "internalType": "uint256",
+                "name": "tradeId",
+                "type": "uint256"
             }
         ],
         "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_keeper",
+                "type": "address"
+            }
+        ],
+        "name": "setMaxOIKeeper",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
@@ -1778,10 +2010,32 @@ trading_storage_abi = [
                         "internalType": "bool",
                         "name": "buy",
                         "type": "bool"
+                    },
+                    {
+                        "internalType": "bool",
+                        "name": "isDayTrade",
+                        "type": "bool"
                     }
                 ],
                 "internalType": "struct IOstiumTradingStorage.OpenLimitOrder",
                 "name": "o",
+                "type": "tuple"
+            },
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "builder",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint32",
+                        "name": "builderFee",
+                        "type": "uint32"
+                    }
+                ],
+                "internalType": "struct IOstiumTradingStorage.BuilderFee",
+                "name": "bf",
                 "type": "tuple"
             }
         ],
@@ -1813,6 +2067,11 @@ trading_storage_abi = [
                         "internalType": "enum IOstiumTradingStorage.LimitOrder",
                         "name": "orderType",
                         "type": "uint8"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "tradeId",
+                        "type": "uint256"
                     }
                 ],
                 "internalType": "struct IOstiumTradingStorage.PendingAutomationOrder",
@@ -1826,6 +2085,24 @@ trading_storage_abi = [
             }
         ],
         "name": "storePendingAutomationOrder",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "orderId",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "tradeId",
+                "type": "uint256"
+            }
+        ],
+        "name": "storePendingMarketCloseTradeId",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -1895,6 +2172,11 @@ trading_storage_abi = [
                                 "internalType": "bool",
                                 "name": "buy",
                                 "type": "bool"
+                            },
+                            {
+                                "internalType": "bool",
+                                "name": "isDayTrade",
+                                "type": "bool"
                             }
                         ],
                         "internalType": "struct IOstiumTradingStorage.Trade",
@@ -1920,6 +2202,23 @@ trading_storage_abi = [
                 "internalType": "bool",
                 "name": "_open",
                 "type": "bool"
+            },
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "builder",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint32",
+                        "name": "builderFee",
+                        "type": "uint32"
+                    }
+                ],
+                "internalType": "struct IOstiumTradingStorage.BuilderFee",
+                "name": "bf",
+                "type": "tuple"
             }
         ],
         "name": "storePendingMarketOrder",
@@ -1950,6 +2249,11 @@ trading_storage_abi = [
                         "internalType": "uint8",
                         "name": "index",
                         "type": "uint8"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "tradeId",
+                        "type": "uint256"
                     }
                 ],
                 "internalType": "struct IOstiumTradingStorage.PendingRemoveCollateral",
@@ -2015,6 +2319,11 @@ trading_storage_abi = [
                         "internalType": "bool",
                         "name": "buy",
                         "type": "bool"
+                    },
+                    {
+                        "internalType": "bool",
+                        "name": "isDayTrade",
+                        "type": "bool"
                     }
                 ],
                 "internalType": "struct IOstiumTradingStorage.Trade",
@@ -2055,7 +2364,7 @@ trading_storage_abi = [
                     },
                     {
                         "internalType": "bool",
-                        "name": "beingMarketClosed",
+                        "name": "deprecatedBeingMarketClosed",
                         "type": "bool"
                     }
                 ],
@@ -2310,6 +2619,11 @@ trading_storage_abi = [
                         "internalType": "bool",
                         "name": "buy",
                         "type": "bool"
+                    },
+                    {
+                        "internalType": "bool",
+                        "name": "isDayTrade",
+                        "type": "bool"
                     }
                 ],
                 "internalType": "struct IOstiumTradingStorage.OpenLimitOrder",
@@ -2425,6 +2739,11 @@ trading_storage_abi = [
                     {
                         "internalType": "bool",
                         "name": "buy",
+                        "type": "bool"
+                    },
+                    {
+                        "internalType": "bool",
+                        "name": "isDayTrade",
                         "type": "bool"
                     }
                 ],

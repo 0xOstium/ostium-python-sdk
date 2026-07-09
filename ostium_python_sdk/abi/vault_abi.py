@@ -38,12 +38,49 @@ vault_abi = [
     {
         "inputs": [
             {
-                "internalType": "address",
-                "name": "account",
-                "type": "address"
+                "internalType": "uint256",
+                "name": "assets",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "minAssetsIn",
+                "type": "uint256"
             }
         ],
-        "name": "AddressInsufficientBalance",
+        "name": "AssetsInTooLow",
+        "type": "error"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            },
+            {
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            }
+        ],
+        "name": "DepositNotClaimable",
+        "type": "error"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            },
+            {
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            }
+        ],
+        "name": "DepositNotReclaimable",
         "type": "error"
     },
     {
@@ -229,7 +266,28 @@ vault_abi = [
     },
     {
         "inputs": [],
-        "name": "FailedInnerCall",
+        "name": "FailedCall",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "FunctionDisabled",
+        "type": "error"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "a",
+                "type": "address"
+            }
+        ],
+        "name": "HasAlreadyRole",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "InsufficientBuffer",
         "type": "error"
     },
     {
@@ -239,17 +297,7 @@ vault_abi = [
     },
     {
         "inputs": [],
-        "name": "MathOverflowedMulDiv",
-        "type": "error"
-    },
-    {
-        "inputs": [],
         "name": "MaxDailyPnlReached",
-        "type": "error"
-    },
-    {
-        "inputs": [],
-        "name": "NoActiveDiscount",
         "type": "error"
     },
     {
@@ -277,6 +325,17 @@ vault_abi = [
             }
         ],
         "name": "NotCallbacks",
+        "type": "error"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "a",
+                "type": "address"
+            }
+        ],
+        "name": "NotDev",
         "type": "error"
     },
     {
@@ -308,7 +367,34 @@ vault_abi = [
                 "type": "address"
             }
         ],
+        "name": "NotMM",
+        "type": "error"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "a",
+                "type": "address"
+            }
+        ],
         "name": "NotOpenPnl",
+        "type": "error"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "a",
+                "type": "address"
+            }
+        ],
+        "name": "NotTimelock",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "NullAddr",
         "type": "error"
     },
     {
@@ -376,8 +462,51 @@ vault_abi = [
         "type": "error"
     },
     {
-        "inputs": [],
-        "name": "WaitNextEpochStart",
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "shares",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "maxSharesOut",
+                "type": "uint256"
+            }
+        ],
+        "name": "SharesOutTooHigh",
+        "type": "error"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            },
+            {
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            }
+        ],
+        "name": "WithdrawNotClaimable",
+        "type": "error"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            },
+            {
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            }
+        ],
+        "name": "WithdrawNotReclaimable",
         "type": "error"
     },
     {
@@ -404,6 +533,11 @@ vault_abi = [
     {
         "inputs": [],
         "name": "WrongParams",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "ZeroAmount",
         "type": "error"
     },
     {
@@ -447,6 +581,43 @@ vault_abi = [
             }
         ],
         "name": "AccPnlPerTokenUsedUpdated",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": True,
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            },
+            {
+                "indexed": False,
+                "internalType": "int256",
+                "name": "prevOpenPnl",
+                "type": "int256"
+            },
+            {
+                "indexed": False,
+                "internalType": "int256",
+                "name": "newOpenPnl",
+                "type": "int256"
+            },
+            {
+                "indexed": False,
+                "internalType": "int256",
+                "name": "settlementOpenPnl",
+                "type": "int256"
+            },
+            {
+                "indexed": False,
+                "internalType": "int256",
+                "name": "accPnlPerTokenUsed",
+                "type": "int256"
+            }
+        ],
+        "name": "AccPnlPerTokenUsedUpdatedV2",
         "type": "event"
     },
     {
@@ -547,6 +718,43 @@ vault_abi = [
         "anonymous": False,
         "inputs": [
             {
+                "indexed": True,
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            },
+            {
+                "indexed": False,
+                "internalType": "int256",
+                "name": "deltaShares",
+                "type": "int256"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "totalAssetsToDeposit",
+                "type": "uint256"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "totalSharesToWithdraw",
+                "type": "uint256"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "shareToAssetsPrice",
+                "type": "uint256"
+            }
+        ],
+        "name": "AsyncDepositWithdrawExecuted",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
                 "indexed": False,
                 "internalType": "uint256",
                 "name": "value",
@@ -591,6 +799,31 @@ vault_abi = [
             }
         ],
         "name": "Deposit",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": True,
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            },
+            {
+                "indexed": True,
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "shares",
+                "type": "uint256"
+            }
+        ],
+        "name": "DepositClaimedV2",
         "type": "event"
     },
     {
@@ -654,6 +887,81 @@ vault_abi = [
             }
         ],
         "name": "DepositLocked",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": True,
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            },
+            {
+                "indexed": True,
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "refundedAssets",
+                "type": "uint256"
+            }
+        ],
+        "name": "DepositPartiallyRefunded",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": True,
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            },
+            {
+                "indexed": True,
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "assets",
+                "type": "uint256"
+            }
+        ],
+        "name": "DepositReclaimedV2",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": True,
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            },
+            {
+                "indexed": True,
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "assets",
+                "type": "uint256"
+            }
+        ],
+        "name": "DepositRequestedV2",
         "type": "event"
     },
     {
@@ -742,6 +1050,81 @@ vault_abi = [
         "anonymous": False,
         "inputs": [
             {
+                "indexed": True,
+                "internalType": "address",
+                "name": "mm",
+                "type": "address"
+            },
+            {
+                "indexed": True,
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "assets",
+                "type": "uint256"
+            }
+        ],
+        "name": "MMDeposit",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": True,
+                "internalType": "address",
+                "name": "mm",
+                "type": "address"
+            },
+            {
+                "indexed": True,
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            },
+            {
+                "indexed": True,
+                "internalType": "address",
+                "name": "receiver",
+                "type": "address"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "assets",
+                "type": "uint256"
+            }
+        ],
+        "name": "MMWithdraw",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": True,
+                "internalType": "address",
+                "name": "oldMM",
+                "type": "address"
+            },
+            {
+                "indexed": True,
+                "internalType": "address",
+                "name": "newMM",
+                "type": "address"
+            }
+        ],
+        "name": "MarketMakerUpdated",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
                 "indexed": False,
                 "internalType": "uint256",
                 "name": "value",
@@ -795,6 +1178,44 @@ vault_abi = [
         "inputs": [
             {
                 "indexed": False,
+                "internalType": "uint8",
+                "name": "maxDeltaId",
+                "type": "uint8"
+            },
+            {
+                "indexed": False,
+                "internalType": "int256",
+                "name": "delta",
+                "type": "int256"
+            },
+            {
+                "indexed": False,
+                "internalType": "int256",
+                "name": "maxDelta",
+                "type": "int256"
+            }
+        ],
+        "name": "MaxOpenPnlDeltaUsed",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": False,
+                "internalType": "uint32",
+                "name": "newValue",
+                "type": "uint32"
+            }
+        ],
+        "name": "MaxSettlementIntervalUpdated",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": False,
                 "internalType": "uint256",
                 "name": "value",
                 "type": "uint256"
@@ -805,8 +1226,83 @@ vault_abi = [
     },
     {
         "anonymous": False,
+        "inputs": [
+            {
+                "indexed": True,
+                "internalType": "uint16",
+                "name": "newEpoch",
+                "type": "uint16"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint32",
+                "name": "newEpochTs",
+                "type": "uint32"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            }
+        ],
+        "name": "NewEpoch",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
         "inputs": [],
         "name": "OpenPnlCallFailed",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": True,
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            },
+            {
+                "indexed": True,
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "assets",
+                "type": "uint256"
+            }
+        ],
+        "name": "RequestDepositCanceledV2",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": True,
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            },
+            {
+                "indexed": True,
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "shares",
+                "type": "uint256"
+            }
+        ],
+        "name": "RequestWithdrawCanceledV2",
         "type": "event"
     },
     {
@@ -838,6 +1334,79 @@ vault_abi = [
         "anonymous": False,
         "inputs": [
             {
+                "indexed": True,
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint32",
+                "name": "settlementTs",
+                "type": "uint32"
+            },
+            {
+                "indexed": False,
+                "internalType": "int256",
+                "name": "settlementOpenPnl",
+                "type": "int256"
+            },
+            {
+                "indexed": False,
+                "internalType": "enum IOstiumVault.SettlementType",
+                "name": "settlementType",
+                "type": "uint8"
+            },
+            {
+                "indexed": False,
+                "internalType": "int256",
+                "name": "accPnlPerTokenUsed",
+                "type": "int256"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "accRewardsPerToken",
+                "type": "uint256"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "shareToAssetsPrice",
+                "type": "uint256"
+            },
+            {
+                "indexed": False,
+                "internalType": "int256",
+                "name": "totalClosedPnl",
+                "type": "int256"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "totalSupply",
+                "type": "uint256"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "totalAssets",
+                "type": "uint256"
+            },
+            {
+                "indexed": False,
+                "internalType": "int256",
+                "name": "bufferSize",
+                "type": "int256"
+            }
+        ],
+        "name": "SettlementExecuted",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
                 "indexed": False,
                 "internalType": "uint256",
                 "name": "value",
@@ -845,6 +1414,94 @@ vault_abi = [
             }
         ],
         "name": "ShareToAssetsPriceUpdated",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "value",
+                "type": "uint256"
+            }
+        ],
+        "name": "SupplyCapUpdated",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": True,
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "totalAssetsToDeposit",
+                "type": "uint256"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "maxAssets",
+                "type": "uint256"
+            }
+        ],
+        "name": "TotalAssetsToDepositAboveMax",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": True,
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "requestedAmount",
+                "type": "uint256"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "allocatedAmount",
+                "type": "uint256"
+            }
+        ],
+        "name": "TotalAssetsToDepositCapped",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": True,
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "totalSharesToWithdraw",
+                "type": "uint256"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "maxShares",
+                "type": "uint256"
+            }
+        ],
+        "name": "TotalSharesToWithdrawAboveMax",
         "type": "event"
     },
     {
@@ -950,6 +1607,31 @@ vault_abi = [
         "anonymous": False,
         "inputs": [
             {
+                "indexed": True,
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            },
+            {
+                "indexed": True,
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "assets",
+                "type": "uint256"
+            }
+        ],
+        "name": "WithdrawClaimedV2",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
                 "indexed": False,
                 "internalType": "uint16[2]",
                 "name": "value",
@@ -957,6 +1639,31 @@ vault_abi = [
             }
         ],
         "name": "WithdrawLockThresholdsPUpdated",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": True,
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            },
+            {
+                "indexed": True,
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "shares",
+                "type": "uint256"
+            }
+        ],
+        "name": "WithdrawReclaimedV2",
         "type": "event"
     },
     {
@@ -997,8 +1704,219 @@ vault_abi = [
         "type": "event"
     },
     {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": True,
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            },
+            {
+                "indexed": True,
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            },
+            {
+                "indexed": False,
+                "internalType": "uint256",
+                "name": "shares",
+                "type": "uint256"
+            }
+        ],
+        "name": "WithdrawRequestedV2",
+        "type": "event"
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": False,
+                "internalType": "uint32",
+                "name": "value",
+                "type": "uint32"
+            }
+        ],
+        "name": "WithdrawSettlementDelayUpdated",
+        "type": "event"
+    },
+    {
+        "inputs": [],
+        "name": "__DEPRECATED_currentEpochPositiveOpenPnl",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "__DEPRECATED_currentMaxSupply",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "__DEPRECATED_lastMaxSupplyUpdateTs",
+        "outputs": [
+            {
+                "internalType": "uint32",
+                "name": "",
+                "type": "uint32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "__DEPRECATED_maxDiscountP",
+        "outputs": [
+            {
+                "internalType": "uint16",
+                "name": "",
+                "type": "uint16"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "__DEPRECATED_maxDiscountThresholdP",
+        "outputs": [
+            {
+                "internalType": "uint16",
+                "name": "",
+                "type": "uint16"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "__DEPRECATED_maxSupplyIncreaseDailyP",
+        "outputs": [
+            {
+                "internalType": "uint16",
+                "name": "",
+                "type": "uint16"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "__DEPRECATED_totalDeposited",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "__DEPRECATED_totalLiability",
+        "outputs": [
+            {
+                "internalType": "int256",
+                "name": "",
+                "type": "int256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "__DEPRECATED_totalRewards",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "name": "__DEPRECATED_withdrawLockThresholdsP",
+        "outputs": [
+            {
+                "internalType": "uint16",
+                "name": "",
+                "type": "uint16"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "trader",
+                "type": "address"
+            },
+            {
+                "internalType": "uint16",
+                "name": "withdrawEpoch",
+                "type": "uint16"
+            }
+        ],
+        "name": "__DEPRECATED_withdrawRequests",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
         "inputs": [],
         "name": "accPnlPerToken",
+        "outputs": [
+            {
+                "internalType": "int256",
+                "name": "",
+                "type": "int256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "accPnlPerTokenThreshold",
         "outputs": [
             {
                 "internalType": "int256",
@@ -1131,37 +2049,63 @@ vault_abi = [
     {
         "inputs": [
             {
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            },
+            {
                 "internalType": "uint256",
-                "name": "shares",
+                "name": "assets",
                 "type": "uint256"
-            },
-            {
-                "internalType": "address",
-                "name": "owner",
-                "type": "address"
-            },
-            {
-                "internalType": "uint16",
-                "name": "unlockEpoch",
-                "type": "uint16"
             }
         ],
-        "name": "cancelWithdrawRequest",
+        "name": "cancelRequestDeposit",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "inputs": [],
-        "name": "collateralizationP",
-        "outputs": [
+        "inputs": [
+            {
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            },
             {
                 "internalType": "uint256",
-                "name": "",
+                "name": "shares",
                 "type": "uint256"
             }
         ],
-        "stateMutability": "view",
+        "name": "cancelRequestWithdraw",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            }
+        ],
+        "name": "claimDeposit",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            }
+        ],
+        "name": "claimWithdraw",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
@@ -1187,6 +2131,30 @@ vault_abi = [
         "inputs": [
             {
                 "internalType": "uint256",
+                "name": "shares",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_shareToAssetsPrice",
+                "type": "uint256"
+            }
+        ],
+        "name": "convertToAssetsWithPrice",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "pure",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
                 "name": "assets",
                 "type": "uint256"
             }
@@ -1200,6 +2168,30 @@ vault_abi = [
             }
         ],
         "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "assets",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_shareToAssetsPrice",
+                "type": "uint256"
+            }
+        ],
+        "name": "convertToSharesWithPrice",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "pure",
         "type": "function"
     },
     {
@@ -1230,38 +2222,12 @@ vault_abi = [
     },
     {
         "inputs": [],
-        "name": "currentEpochPositiveOpenPnl",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
         "name": "currentEpochStart",
         "outputs": [
             {
                 "internalType": "uint32",
                 "name": "",
                 "type": "uint32"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "currentMaxSupply",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
             }
         ],
         "stateMutability": "view",
@@ -1323,40 +2289,75 @@ vault_abi = [
                 "internalType": "uint256",
                 "name": "assets",
                 "type": "uint256"
-            },
-            {
-                "internalType": "uint32",
-                "name": "lockDuration",
-                "type": "uint32"
-            },
-            {
-                "internalType": "address",
-                "name": "receiver",
-                "type": "address"
-            }
-        ],
-        "name": "depositWithDiscountAndLock",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "assets",
-                "type": "uint256"
             }
         ],
         "name": "distributeReward",
         "outputs": [],
         "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "effectiveAccPnlPerTokenUsed",
+        "outputs": [
+            {
+                "internalType": "int256",
+                "name": "",
+                "type": "int256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "forceResetDailyAccPnlDelta",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "forceSettlement",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getBufferSize",
+        "outputs": [
+            {
+                "internalType": "int256",
+                "name": "",
+                "type": "int256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            },
+            {
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            }
+        ],
+        "name": "getDepositStatus",
+        "outputs": [
+            {
+                "internalType": "enum IOstiumVault.RequestStatus",
+                "name": "requestStatus",
+                "type": "uint8"
+            }
+        ],
+        "stateMutability": "view",
         "type": "function"
     },
     {
@@ -1414,6 +2415,30 @@ vault_abi = [
         "inputs": [
             {
                 "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            },
+            {
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            }
+        ],
+        "name": "getWithdrawStatus",
+        "outputs": [
+            {
+                "internalType": "enum IOstiumVault.RequestStatus",
+                "name": "requestStatus",
+                "type": "uint8"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
                 "name": "_asset",
                 "type": "address"
             },
@@ -1460,6 +2485,46 @@ vault_abi = [
     },
     {
         "inputs": [],
+        "name": "initializeV2",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "initializeV3",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_marketMaker",
+                "type": "address"
+            }
+        ],
+        "name": "initializeV4",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "isBufferPositive",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
         "name": "lastDailyAccPnlDeltaResetTs",
         "outputs": [
             {
@@ -1473,7 +2538,7 @@ vault_abi = [
     },
     {
         "inputs": [],
-        "name": "lastMaxSupplyUpdateTs",
+        "name": "lastSettlementId",
         "outputs": [
             {
                 "internalType": "uint32",
@@ -1485,24 +2550,26 @@ vault_abi = [
         "type": "function"
     },
     {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "collatP",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint32",
-                "name": "lockDuration",
-                "type": "uint32"
-            }
-        ],
-        "name": "lockDiscountP",
+        "inputs": [],
+        "name": "lastSettlementOpenPnl",
         "outputs": [
             {
-                "internalType": "uint256",
+                "internalType": "int256",
                 "name": "",
-                "type": "uint256"
+                "type": "int256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "lastSettlementTs",
+        "outputs": [
+            {
+                "internalType": "uint32",
+                "name": "",
+                "type": "uint32"
             }
         ],
         "stateMutability": "view",
@@ -1566,24 +2633,6 @@ vault_abi = [
         "type": "function"
     },
     {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "shares",
-                "type": "uint256"
-            },
-            {
-                "internalType": "address",
-                "name": "owner",
-                "type": "address"
-            }
-        ],
-        "name": "makeWithdrawRequest",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
         "inputs": [],
         "name": "marketCap",
         "outputs": [
@@ -1591,6 +2640,19 @@ vault_abi = [
                 "internalType": "uint256",
                 "name": "",
                 "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "marketMaker",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
             }
         ],
         "stateMutability": "view",
@@ -1655,32 +2717,6 @@ vault_abi = [
         "type": "function"
     },
     {
-        "inputs": [],
-        "name": "maxDiscountP",
-        "outputs": [
-            {
-                "internalType": "uint16",
-                "name": "",
-                "type": "uint16"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "maxDiscountThresholdP",
-        "outputs": [
-            {
-                "internalType": "uint16",
-                "name": "",
-                "type": "uint16"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
         "inputs": [
             {
                 "internalType": "address",
@@ -1720,12 +2756,12 @@ vault_abi = [
     },
     {
         "inputs": [],
-        "name": "maxSupplyIncreaseDailyP",
+        "name": "maxSettlementInterval",
         "outputs": [
             {
-                "internalType": "uint16",
+                "internalType": "uint32",
                 "name": "",
-                "type": "uint16"
+                "type": "uint32"
             }
         ],
         "stateMutability": "view",
@@ -1778,13 +2814,21 @@ vault_abi = [
         "inputs": [
             {
                 "internalType": "uint256",
-                "name": "shares",
+                "name": "assets",
                 "type": "uint256"
-            },
+            }
+        ],
+        "name": "mmDeposit",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
             {
-                "internalType": "uint32",
-                "name": "lockDuration",
-                "type": "uint32"
+                "internalType": "uint256",
+                "name": "assets",
+                "type": "uint256"
             },
             {
                 "internalType": "address",
@@ -1792,12 +2836,25 @@ vault_abi = [
                 "type": "address"
             }
         ],
-        "name": "mintWithDiscountAndLock",
+        "name": "mmWithdraw",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes[]",
+                "name": "data",
+                "type": "bytes[]"
+            }
+        ],
+        "name": "multicall",
         "outputs": [
             {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
+                "internalType": "bytes[]",
+                "name": "results",
+                "type": "bytes[]"
             }
         ],
         "stateMutability": "nonpayable",
@@ -1811,6 +2868,54 @@ vault_abi = [
                 "internalType": "string",
                 "name": "",
                 "type": "string"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            },
+            {
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            }
+        ],
+        "name": "pendingDepositRequest",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            },
+            {
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            }
+        ],
+        "name": "pendingWithdrawRequest",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
             }
         ],
         "stateMutability": "view",
@@ -1913,6 +3018,32 @@ vault_abi = [
     {
         "inputs": [
             {
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            }
+        ],
+        "name": "reclaimDeposit",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            }
+        ],
+        "name": "reclaimWithdraw",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
                 "internalType": "uint256",
                 "name": "shares",
                 "type": "uint256"
@@ -1958,6 +3089,32 @@ vault_abi = [
                 "internalType": "uint256",
                 "name": "assets",
                 "type": "uint256"
+            }
+        ],
+        "name": "requestDeposit",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "shares",
+                "type": "uint256"
+            }
+        ],
+        "name": "requestWithdraw",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "assets",
+                "type": "uint256"
             },
             {
                 "internalType": "address",
@@ -1971,8 +3128,72 @@ vault_abi = [
         "type": "function"
     },
     {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_mm",
+                "type": "address"
+            }
+        ],
+        "name": "setMarketMaker",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            }
+        ],
+        "name": "settlementAllocationScaleP",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            }
+        ],
+        "name": "settlementShareToAssetsPrice",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
         "inputs": [],
         "name": "shareToAssetsPrice",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "supplyCap",
         "outputs": [
             {
                 "internalType": "uint256",
@@ -1997,8 +3218,46 @@ vault_abi = [
         "type": "function"
     },
     {
+        "inputs": [
+            {
+                "internalType": "bool",
+                "name": "isDeposit",
+                "type": "bool"
+            }
+        ],
+        "name": "targetSettlementId",
+        "outputs": [
+            {
+                "internalType": "uint32",
+                "name": "",
+                "type": "uint32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
         "inputs": [],
         "name": "totalAssets",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            }
+        ],
+        "name": "totalAssetsToDeposit",
         "outputs": [
             {
                 "internalType": "uint256",
@@ -2024,38 +3283,12 @@ vault_abi = [
     },
     {
         "inputs": [],
-        "name": "totalDeposited",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
         "name": "totalDiscounts",
         "outputs": [
             {
                 "internalType": "uint256",
                 "name": "",
                 "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "totalLiability",
-        "outputs": [
-            {
-                "internalType": "int256",
-                "name": "",
-                "type": "int256"
             }
         ],
         "stateMutability": "view",
@@ -2075,31 +3308,18 @@ vault_abi = [
         "type": "function"
     },
     {
-        "inputs": [],
-        "name": "totalRewards",
+        "inputs": [
+            {
+                "internalType": "uint32",
+                "name": "settlementId",
+                "type": "uint32"
+            }
+        ],
+        "name": "totalSharesToWithdraw",
         "outputs": [
             {
                 "internalType": "uint256",
                 "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "owner",
-                "type": "address"
-            }
-        ],
-        "name": "totalSharesBeingWithdrawn",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "shares",
                 "type": "uint256"
             }
         ],
@@ -2128,7 +3348,7 @@ vault_abi = [
             },
             {
                 "internalType": "uint256",
-                "name": "amount",
+                "name": "value",
                 "type": "uint256"
             }
         ],
@@ -2157,7 +3377,7 @@ vault_abi = [
             },
             {
                 "internalType": "uint256",
-                "name": "amount",
+                "name": "value",
                 "type": "uint256"
             }
         ],
@@ -2174,7 +3394,7 @@ vault_abi = [
     },
     {
         "inputs": [],
-        "name": "tryNewOpenPnlRequestOrEpoch",
+        "name": "tryNewSettlement",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -2182,13 +3402,6 @@ vault_abi = [
     {
         "inputs": [],
         "name": "tryResetDailyAccPnlDelta",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "tryUpdateCurrentMaxSupply",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -2228,30 +3441,6 @@ vault_abi = [
         "inputs": [
             {
                 "internalType": "uint256",
-                "name": "prevPositiveOpenPnl",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "newPositiveOpenPnl",
-                "type": "uint256"
-            }
-        ],
-        "name": "updateAccPnlPerTokenUsed",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
                 "name": "newValue",
                 "type": "uint256"
             }
@@ -2277,12 +3466,12 @@ vault_abi = [
     {
         "inputs": [
             {
-                "internalType": "uint256",
+                "internalType": "uint32",
                 "name": "newValue",
-                "type": "uint256"
+                "type": "uint32"
             }
         ],
-        "name": "updateMaxDiscountP",
+        "name": "updateMaxSettlementInterval",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -2295,7 +3484,7 @@ vault_abi = [
                 "type": "uint256"
             }
         ],
-        "name": "updateMaxDiscountThresholdP",
+        "name": "updateSupplyCap",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -2303,25 +3492,12 @@ vault_abi = [
     {
         "inputs": [
             {
-                "internalType": "uint256",
+                "internalType": "uint32",
                 "name": "newValue",
-                "type": "uint256"
+                "type": "uint32"
             }
         ],
-        "name": "updateMaxSupplyIncreaseDailyP",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint16[2]",
-                "name": "newValue",
-                "type": "uint16[2]"
-            }
-        ],
-        "name": "updateWithdrawLockThresholdsP",
+        "name": "updateWithdrawSettlementDelay",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -2357,55 +3533,12 @@ vault_abi = [
     },
     {
         "inputs": [],
-        "name": "withdrawEpochsTimelock",
+        "name": "withdrawSettlementDelay",
         "outputs": [
             {
-                "internalType": "uint8",
+                "internalType": "uint32",
                 "name": "",
-                "type": "uint8"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "name": "withdrawLockThresholdsP",
-        "outputs": [
-            {
-                "internalType": "uint16",
-                "name": "",
-                "type": "uint16"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "trader",
-                "type": "address"
-            },
-            {
-                "internalType": "uint16",
-                "name": "withdrawEpoch",
-                "type": "uint16"
-            }
-        ],
-        "name": "withdrawRequests",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
+                "type": "uint32"
             }
         ],
         "stateMutability": "view",

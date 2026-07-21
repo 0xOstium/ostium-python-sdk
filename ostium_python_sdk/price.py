@@ -6,7 +6,7 @@ from typing import Tuple
 class Price:
     def __init__(self, verbose=False):
         self.verbose = verbose
-        self.base_url = "https://metadata-backend.ostium.io"
+        self.base_url = "https://metadata-backend.prod.bedrock.ostium.io"
 
     def log(self, message):
         if self.verbose:

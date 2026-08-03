@@ -198,33 +198,46 @@ The intraction with Ostium platform is denoted with pair_id and trade_index.
 
 - As of May 2025, the following pairs are available on the mainnet: 
 
-| ID | Trading Pair | Description                    |
-|----|--------------|--------------------------------|
-| 0  | BTC-USD      | Bitcoin                        |
-| 1  | ETH-USD      | Ethereum                       |
-| 2  | EUR-USD      | Euro                           |
-| 3  | GBP-USD      | British Pound                  |
-| 4  | USD-JPY      | US Dollar to Japanese Yen      |
-| 5  | XAU-USD      | Gold                           |
-| 6  | HG-USD       | Copper                         |
-| 7  | CL-USD       | Crude Oil                      |
-| 8  | XAG-USD      | Silver                         |
-| 9  | SOL-USD      | Solana                         |
-| 10 | SPX-USD      | S&P 500 Index                  |
-| 11 | DJI-USD      | Dow Jones Industrial Average   |
-| 12 | NDX-USD      | NASDAQ-100 Index               |
-| 13 | NIK-JPY      | Nikkei 225 Index               |
-| 14 | FTSE-GBP     | FTSE 100 Index                 |
-| 15 | DAX-EUR      | DAX Index                      |
-| 16 | USD-CAD      | US Dollar to Canadian Dollar   |
-| 17 | USD-MXN      | US Dollar to Mexican Peso      |
-| 18 | NVDA-USD     | NVIDIA Stock                   |
-| 19 | GOOG-USD     | Alphabet (Google) Stock        |
-| 20 | AMZN-USD     | Amazon Stock                   |
-| 21 | META-USD     | Meta (Facebook) Stock          |
-| 22 | TSLA-USD     | Tesla Stock                    |
-| 23 | AAPL-USD     | Apple Stock                    |
-| 24 | MSFT-USD     | Microsoft Stock                |
+| ID | Trading Pair | Description                  |
+| -- | ------------ | ---------------------------- |
+| 0  | BTC-USD      | Bitcoin                      |
+| 1  | ETH-USD      | Ethereum                     |
+| 2  | EUR-USD      | Euro                         |
+| 3  | GBP-USD      | British Pound                |
+| 4  | USD-JPY      | US Dollar to Japanese Yen    |
+| 5  | XAU-USD      | Gold                         |
+| 6  | HG-USD       | Copper                       |
+| 7  | CL-USD       | Crude Oil                    |
+| 8  | XAG-USD      | Silver                       |
+| 9  | SOL-USD      | Solana                       |
+| 10 | SPX-USD      | S&P 500 Index                |
+| 11 | DJI-USD      | Dow Jones Industrial Average |
+| 12 | NDX-USD      | NASDAQ-100 Index             |
+| 13 | NIK-JPY      | Nikkei 225 Index             |
+| 14 | FTSE-GBP     | FTSE 100 Index               |
+| 15 | DAX-EUR      | DAX Index                    |
+| 16 | USD-CAD      | US Dollar to Canadian Dollar |
+| 17 | USD-MXN      | US Dollar to Mexican Peso    |
+| 18 | NVDA-USD     | NVIDIA Stock                 |
+| 19 | GOOG-USD     | Alphabet (Google) Stock      |
+| 20 | AMZN-USD     | Amazon Stock                 |
+| 21 | META-USD     | Meta (Facebook) Stock        |
+| 22 | TSLA-USD     | Tesla Stock                  |
+| 23 | AAPL-USD     | Apple Stock                  |
+| 24 | MSFT-USD     | Microsoft Stock              |
+| 25 | USD-CHF      | US Dollar to Swiss Franc     |
+| 26 | AUD-USD      | Australian Dollar            |
+| 27 | NZD-USD      | New Zealand Dollar           |
+| 28 | XPD-USD      | Palladium                    |
+| 29 | XPT-USD      | Platinum                     |
+| 30 | HSI-HKD      | Hang Seng Index              |
+| 31 | COIN-USD     | Coinbase Stock               |
+| 32 | HOOD-USD     | Robinhood Stock              |
+| 33 | MSTR-USD     | MicroStrategy Stock          |
+| 34 | CRCL-USD     | Circle Stock                 |
+| 35 | BMNR-USD     | Bitminer Stock               |
+| 36 | SBET-USD     | SharpBet Stock               |
+| 37 | GLXY-USD     | Galaxy Digital Stock         |
 
 ## Usage Examples
 

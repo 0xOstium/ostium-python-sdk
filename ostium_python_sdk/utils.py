@@ -1,39 +1,58 @@
 from datetime import datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation, ROUND_DOWN, ROUND_HALF_EVEN, localcontext
 from web3 import Web3
 from ast import literal_eval
 
 from .constants import MAX_PROFIT_P, MAX_STOP_LOSS_P
 
 
+def _to_decimal(value, name):
+    """Convert a numeric value to a finite Decimal without binary-float coercion."""
+    if callable(value):
+        raise TypeError(f"{name} cannot be a function")
+
+    try:
+        decimal_value = Decimal(str(value))
+    except (InvalidOperation, TypeError, ValueError) as error:
+        raise TypeError(f"Invalid {name}: {value!r}") from error
+
+    if not decimal_value.is_finite():
+        raise ValueError(f"{name} must be finite")
+
+    return decimal_value
+
+
+def _validate_decimal_places(value, name):
+    """Validate and return a non-negative integer decimal-place count."""
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise ValueError(f"{name} must be a non-negative integer")
+    return value
+
+
+def _scaled_integer(value, decimals, rounding, name):
+    """Scale a finite decimal value and apply an explicit rounding policy."""
+    decimal_value = _to_decimal(value, name)
+    decimals = _validate_decimal_places(decimals, "decimals")
+    digits = len(decimal_value.as_tuple().digits)
+    exponent = max(decimal_value.as_tuple().exponent, 0)
+
+    with localcontext() as context:
+        context.prec = max(28, digits + exponent + decimals + 8)
+        scaled = decimal_value * (Decimal(10) ** decimals)
+        return int(scaled.to_integral_value(rounding=rounding))
+
+
 def format_with_precision(number, precision):
     """
-    Formats a number to a specified decimal precision, removing trailing zeros.
+    Round a numeric value to a decimal precision and return it as a float.
 
-    Args:
-        number: The number to be formatted (can be int, float, or numeric string)
-        precision (int): Maximum number of decimal places to round to
-
-    Returns:
-        str: Formatted number with up to specified decimal precision, trailing zeros removed
+    Decimal parsing is used internally so a decimal string is not first rounded
+    by binary floating-point arithmetic. The public float return type is kept
+    for compatibility with existing callers.
     """
-    try:
-        if callable(number):
-            raise TypeError("Input cannot be a function")
-
-        float_number = float(number)
-        precision = int(precision)
-
-        # Format with specified precision first
-        formatted = "{:.{}f}".format(round(float_number, precision), precision)
-        # Remove trailing zeros after decimal point, but keep at least one digit before decimal
-        formatted = formatted.rstrip('0').rstrip(
-            '.') if '.' in formatted else formatted
-
-        return float(formatted)
-
-    except (TypeError, ValueError) as e:
-        raise TypeError(f"Invalid input: {e}")
+    precision = _validate_decimal_places(precision, "precision")
+    rounded = _scaled_integer(number, precision, ROUND_HALF_EVEN, "number")
+    return rounded / (10 ** precision)
 
 
 def calculate_fee_per_hours(cur_funding_rate, hours=24, round_to_precision=5):
@@ -101,9 +120,9 @@ def parse_limit_order_id(limit_order_id):
 
 def is_numeric(value):
     try:
-        float(value)
+        _to_decimal(value, "value")
         return True
-    except ValueError:
+    except (TypeError, ValueError):
         return False
 
 
@@ -176,37 +195,34 @@ def fromErrorCodeToMessage(error_code, verbose=False):
     return str(ret), None
 
 
-def to_base_units(amount: float, decimals: int = 6) -> int:
+def to_base_units(amount, decimals: int = 6) -> int:
     """
-    Converts a decimal number to base units by multiplying by 10^decimals
+    Convert a decimal value to base units using truncation toward zero.
 
-    Args:
-        amount (float): The amount to convert (e.g., 1.23)
-        decimals (int, optional): Number of decimal places. Defaults to 6 for USDC.
-
-    Returns:
-        int: The amount in base units (e.g., 1.23 -> 1230000 for decimals=6)
+    Decimal parsing avoids binary floating-point errors for transaction amounts.
     """
-    return int(float(amount) * 10**decimals)
+    return _scaled_integer(amount, decimals, ROUND_DOWN, "amount")
 
 
 def convert_to_scaled_integer(value, precision=5, scale=18):
-    # First scale to the precision we want to preserve (e.g., 5 decimal places)
-    precise_value = round(Decimal(value) * (10 ** precision))
-    # Then pad with zeros to reach 18 decimals
-    scaled_value = precise_value * (10 ** (scale - precision))
-    return scaled_value
+    """Round a value to ``precision`` places and encode it at ``scale`` places."""
+    precision = _validate_decimal_places(precision, "precision")
+    scale = _validate_decimal_places(scale, "scale")
+    if scale < precision:
+        raise ValueError("scale must be greater than or equal to precision")
+
+    rounded_at_precision = _scaled_integer(
+        value, precision, ROUND_HALF_EVEN, "value")
+    return rounded_at_precision * (10 ** (scale - precision))
 
 
 def is_valid_decimal(s, must_be_positive=True):
     try:
-        float(s)
-    except ValueError:
+        value = _to_decimal(s, "value")
+    except (TypeError, ValueError):
         return False
-    else:
-        if must_be_positive and float(s) < 0:
-            return False
-        return True
+
+    return not must_be_positive or value >= 0
 
 
 def convert_decimals(obj):

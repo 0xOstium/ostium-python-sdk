@@ -392,13 +392,15 @@ class Ostium:
         account = self._get_account()
         amount = to_base_units(trade_params['collateral'], decimals=6)
 
-        # Nonce and allowance are independent chain reads - fetch concurrently
-        owner = self._allowance_owner(
+        # The address the trade is opened for: the trader when delegating, the signer
+        # otherwise. Both the USDC allowance and the trade struct below are keyed to it.
+        on_behalf_of = self._allowance_owner(
             account, trade_params.get('trader_address'))
+        # Nonce and allowance are independent chain reads - fetch concurrently
         with ThreadPoolExecutor(max_workers=2) as executor:
             nonce_future = executor.submit(self.get_nonce, account.address)
             allowance_future = executor.submit(
-                self._check_allowance, owner, amount)
+                self._check_allowance, on_behalf_of, amount)
             nonce = nonce_future.result()
             allowance_future.result()
 
@@ -414,7 +416,7 @@ class Ostium:
                 'openPrice': convert_to_scaled_integer(at_price),
                 'tp': convert_to_scaled_integer(tp_price),
                 'sl': convert_to_scaled_integer(sl_price),
-                'trader': account.address,
+                'trader': on_behalf_of,
                 'leverage': to_base_units(trade_params['leverage'], decimals=2),
                 'pairIndex': int(trade_params['asset_type']),
                 'index': 0,
